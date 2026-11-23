@@ -1,4 +1,4 @@
-import { BaseError, ContractFunctionRevertedError, UserRejectedRequestError } from 'viem'
+import { BaseError, ChainMismatchError, ContractFunctionRevertedError, UserRejectedRequestError } from 'viem'
 
 /**
  * 컨트랙트의 custom error 이름 → 한국어 안내.
@@ -23,11 +23,16 @@ const CONTRACT_ERRORS: Record<string, string> = {
 }
 
 /** 어떤 오류든 사용자에게 보여줄 한국어 문장으로 바꾼다. */
-export function toKoreanError(err: unknown): string {
+export function toKoreanError(err: unknown, context: 'tx' | 'connect' | 'switch' = 'tx'): string {
   if (err instanceof BaseError) {
-    // 1) 사용자가 MetaMask 창에서 "거부"를 누른 경우 (EIP-1193 오류 코드 4001)
-    if (err.walk((e) => e instanceof UserRejectedRequestError)) {
+    // 1) 사용자가 MetaMask 창에서 "거부"를 누르거나 창을 닫은 경우 (EIP-1193 오류 코드 4001)
+    if (err.walk((e) => e instanceof UserRejectedRequestError) || err.name === 'UserRejectedRequestError') {
+      if (context === 'connect') return '지갑 연결 요청을 거절했어요(또는 창을 닫았어요). 다시 "지갑 연결"을 눌러 주세요.'
+      if (context === 'switch') return 'Anvil 네트워크 전환을 거절했어요. 전환해야 트랜잭션을 보낼 수 있어요.'
       return '지갑에서 서명을 거절했어요. 트랜잭션이 전송되지 않았으니 가스도 나가지 않았어요.'
+    }
+    if (err.walk((e) => e instanceof ChainMismatchError)) {
+      return 'MetaMask의 네트워크가 Anvil(31337)이 아니에요. 상단의 "Anvil로 전환" 버튼을 눌러 주세요.'
     }
 
     // 2) 컨트랙트가 revert한 경우 → custom error 이름으로 안내
@@ -45,7 +50,7 @@ export function toKoreanError(err: unknown): string {
     if (msg.includes('fetch') || msg.includes('http request failed') || msg.includes('econnrefused')) {
       return 'Anvil 노드(127.0.0.1:8545)에 연결할 수 없어요. 터미널에서 anvil이 켜져 있는지 확인해 주세요.'
     }
-    if (msg.includes('chain')) {
+    if (msg.includes('chain') && msg.includes('match')) {
       return 'MetaMask의 네트워크가 Anvil(31337)이 아니에요. 상단의 "Anvil로 전환" 버튼을 눌러 주세요.'
     }
     return err.shortMessage

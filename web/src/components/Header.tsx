@@ -46,7 +46,7 @@ export function Header() {
               {isPending ? 'MetaMask에서 승인해 주세요…' : '지갑 연결'}
             </button>
             {!hasMetaMask && <span className="error small">MetaMask 확장 프로그램을 설치해 주세요.</span>}
-            {connectError && <span className="error small">{toKoreanError(connectError)}</span>}
+            {connectError && <span className="error small">{toKoreanError(connectError, 'connect')}</span>}
           </>
         ) : (
           <>

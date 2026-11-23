@@ -2,6 +2,7 @@ import type { TxState } from '../hooks/useTx'
 
 const MESSAGES: Record<TxState['phase'], string> = {
   idle: '',
+  switching: 'MetaMask에서 Anvil 네트워크로 전환(또는 추가)을 승인해 주세요…',
   simulating: '실행 결과를 미리 확인하는 중… (읽기 · 가스 없음)',
   signing: 'MetaMask 창에서 확인(서명)해 주세요…',
   pending: '전송 완료! 블록에 담기기를 기다리는 중…',
