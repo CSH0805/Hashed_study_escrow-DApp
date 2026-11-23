@@ -1,4 +1,10 @@
-import { BaseError, ChainMismatchError, ContractFunctionRevertedError, UserRejectedRequestError } from 'viem'
+import {
+  BaseError,
+  ChainMismatchError,
+  ContractFunctionRevertedError,
+  UnauthorizedProviderError,
+  UserRejectedRequestError,
+} from 'viem'
 
 /**
  * 컨트랙트의 custom error 이름 → 한국어 안내.
@@ -31,6 +37,10 @@ export function toKoreanError(err: unknown, context: 'tx' | 'connect' | 'switch'
       if (context === 'switch') return 'Anvil 네트워크 전환을 거절했어요. 전환해야 트랜잭션을 보낼 수 있어요.'
       return '지갑에서 서명을 거절했어요. 트랜잭션이 전송되지 않았으니 가스도 나가지 않았어요.'
     }
+    // EIP-1193 오류 코드 4100: 이 사이트에 해당 계정/네트워크 권한을 주지 않음
+    if (err.walk((e) => e instanceof UnauthorizedProviderError)) {
+      return 'MetaMask가 이 사이트에 계정 또는 Anvil 네트워크 사용을 허용하지 않았어요. MetaMask 아래쪽 "localhost:5173" 연결 설정에서 계정과 Anvil 네트워크를 허용해 주세요.'
+    }
     if (err.walk((e) => e instanceof ChainMismatchError)) {
       return 'MetaMask의 네트워크가 Anvil(31337)이 아니에요. 상단의 "Anvil로 전환" 버튼을 눌러 주세요.'
     }
@@ -44,6 +54,9 @@ export function toKoreanError(err: unknown, context: 'tx' | 'connect' | 'switch'
 
     // 3) 자주 막히는 환경 문제
     const msg = `${err.shortMessage} ${err.details ?? ''}`.toLowerCase()
+    if (msg.includes('insufficient funds')) {
+      return '가스비로 낼 ETH가 없어요. MetaMask에서 Anvil 테스트 계정(구매자/판매자)을 선택했는지 확인해 주세요.'
+    }
     if (msg.includes('nonce')) {
       return 'nonce가 맞지 않아요. Anvil을 재시작했다면 MetaMask → 설정 → 고급 → "활동 및 논스 데이터 지우기"를 눌러 주세요.'
     }
