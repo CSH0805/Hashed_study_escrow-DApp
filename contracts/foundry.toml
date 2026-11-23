@@ -12,4 +12,8 @@ remappings = [
   "forge-std/=lib/forge-std/src/",
 ]
 
+# 배포 스크립트가 주소 파일을 쓸 수 있게 deployments/ 폴더에만 쓰기 권한을 준다.
+# (스크립트가 아무 파일이나 건드리지 못하도록 Foundry는 기본적으로 파일 접근을 막아 둔다)
+fs_permissions = [{ access = "write", path = "./deployments" }]
+
 # 더 많은 설정: https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
