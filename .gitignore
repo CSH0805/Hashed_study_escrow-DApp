@@ -1,0 +1,24 @@
+# ── macOS / 에디터 ──
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# ── 비밀 값 (절대 커밋 금지) ──
+# 실제 자산이 든 지갑의 개인키나 API 키는 어떤 경우에도 저장소에 올리지 않는다.
+.env
+.env.*
+!.env.example
+
+# ── 컨트랙트 (Foundry) ──
+contracts/out/
+contracts/cache/
+# 로컬 Anvil(chainId 31337) 배포 기록은 Anvil을 껐다 켜면 의미가 없어서 제외
+contracts/broadcast/*/31337/
+contracts/broadcast/**/dry-run/
+
+# ── 웹 (Vite) ──
+web/node_modules/
+web/dist/
+*.local
+npm-debug.log*

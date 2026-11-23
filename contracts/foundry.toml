@@ -1,0 +1,15 @@
+[profile.default]
+src = "src"          # 컨트랙트 소스 폴더
+out = "out"          # 컴파일 결과(ABI, 바이트코드)가 저장되는 폴더 → 5단계에서 웹 화면이 ABI를 여기서 가져감
+libs = ["lib"]       # 외부 라이브러리(forge-std, OpenZeppelin) 폴더
+
+# 컴파일러 버전을 고정해 둠. 버전이 바뀌면 바이트코드가 달라질 수 있어서, 항상 같은 결과를 얻으려고 고정함.
+solc_version = "0.8.30"
+
+# import 경로 별칭: 코드에서 "@openzeppelin/contracts/..." 라고 쓰면 lib 안의 실제 폴더를 가리키게 함.
+remappings = [
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "forge-std/=lib/forge-std/src/",
+]
+
+# 더 많은 설정: https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

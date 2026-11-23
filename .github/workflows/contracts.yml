@@ -1,0 +1,36 @@
+# GitHub에 push하거나 PR을 열 때마다 컨트랙트를 자동으로 빌드·테스트한다.
+name: contracts
+
+permissions: {}
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Foundry build & test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: contracts   # Foundry 프로젝트가 contracts/ 안에 있으므로
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: recursive        # lib/ 안의 OpenZeppelin, forge-std(submodule)도 같이 받기
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Run Forge fmt
+        run: forge fmt --check
+
+      - name: Run Forge build
+        run: forge build --sizes
+
+      - name: Run Forge tests
+        run: forge test -vvv
