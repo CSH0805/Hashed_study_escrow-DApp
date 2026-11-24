@@ -1,7 +1,7 @@
 import 'viem/window' // window.ethereum(MetaMask가 주입하는 객체)의 타입 정의
 import { useAccount, useConnect, useDisconnect, useReadContract, useSwitchChain } from 'wagmi'
-import { anvil } from 'wagmi/chains'
-import { MOCK_USD_ADDRESS, mockUsdAbi } from '../contracts/generated'
+import { mockUsdAbi } from '../contracts/generated'
+import { EXPLORER_URL, IS_LOCAL, MOCK_USD_ADDRESS, NETWORK_NAME, TARGET_CHAIN } from '../network'
 import { formatMusd, formatTime, shortAddress } from '../lib/format'
 import { toKoreanError } from '../lib/errors'
 import { useChainNow } from '../hooks/useChainNow'
@@ -24,15 +24,23 @@ export function Header() {
   })
 
   const hasMetaMask = typeof window !== 'undefined' && !!window.ethereum
-  const wrongChain = isConnected && chainId !== anvil.id
+  const wrongChain = isConnected && chainId !== TARGET_CHAIN.id
 
   return (
     <header className="header">
       <div>
         <h1>스테이블코인 에스크로</h1>
         <p className="muted small">
-          로컬 Anvil 체인(31337) 전용 · 마지막 블록 시각 {lastBlockTime ? formatTime(lastBlockTime) : '연결 중…'}
+          {IS_LOCAL ? '로컬 Anvil 체인(31337)' : `${NETWORK_NAME}(${TARGET_CHAIN.id})`} · 마지막 블록 시각 {lastBlockTime ? formatTime(lastBlockTime) : '연결 중…'}
         </p>
+        {EXPLORER_URL && (
+          <p className="muted small">
+            ⚠️ 테스트넷이에요. 실제 자산이 든 지갑은 연결하지 마세요.{' '}
+            <a href={`${EXPLORER_URL}/address/${MOCK_USD_ADDRESS}`} target="_blank" rel="noreferrer">
+              Etherscan에서 컨트랙트 보기
+            </a>
+          </p>
+        )}
       </div>
 
       <div className="wallet">
@@ -64,8 +72,8 @@ export function Header() {
       {wrongChain && (
         <div className="warn full">
           MetaMask가 다른 네트워크(chainId {chainId})에 연결돼 있어요.{' '}
-          <button disabled={switching} onClick={() => switchChain({ chainId: anvil.id })}>
-            Anvil로 전환
+          <button disabled={switching} onClick={() => switchChain({ chainId: TARGET_CHAIN.id })}>
+            {NETWORK_NAME}로 전환
           </button>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { usePublicClient } from 'wagmi'
-import { ESCROW_ADDRESS, escrowAbi } from '../contracts/generated'
+import { escrowAbi } from '../contracts/generated'
+import { DEPLOY_BLOCK, ESCROW_ADDRESS } from '../network'
 import { formatMusd, formatTime, shortAddress } from '../lib/format'
 import { formatFee, formatGas, formatGasPrice } from '../lib/gas'
 
@@ -23,11 +24,11 @@ export function DealTimeline({ id }: { id: bigint }) {
     queryFn: async () => {
       if (!client) return []
 
-      // ① 이 거래(id)에 관한 이벤트 3종을 블록 0부터 찾는다.
+      // ① 이 거래(id)에 관한 이벤트 3종을 컨트랙트 배포 블록부터 찾는다.
       //    id가 indexed라서 노드가 "id = N인 로그만" 골라 줄 수 있다. (indexed는 검색용 색인)
-      //    ※ 실제 서비스에서는 블록 0부터 훑으면 너무 느려서, 배포 블록부터 찾거나
-      //      The Graph 같은 인덱서(이벤트를 미리 DB에 모아 두는 서버)를 쓴다.
-      const filter = { address: ESCROW_ADDRESS, abi: escrowAbi, args: { id }, fromBlock: 0n } as const
+      //    ※ Sepolia처럼 블록이 수백만 개인 체인에서 블록 0부터 훑으면 노드가 거부한다. 그래서 배포 블록부터 찾는다.
+      //      실제 서비스에서는 The Graph 같은 인덱서(이벤트를 미리 DB에 모아 두는 서버)를 쓴다.
+      const filter = { address: ESCROW_ADDRESS, abi: escrowAbi, args: { id }, fromBlock: DEPLOY_BLOCK } as const
       const [created, released, refunded] = await Promise.all([
         client.getContractEvents({ ...filter, eventName: 'DealCreated' }),
         client.getContractEvents({ ...filter, eventName: 'DealReleased' }),

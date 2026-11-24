@@ -1,10 +1,12 @@
 // ⚠️ 자동 생성 파일입니다. 직접 고치지 말고 `npm run sync` 로 다시 만드세요.
-// 출처: contracts/out/*.json (ABI), contracts/deployments/31337.json (주소)
+// 출처: contracts/out/*.json (ABI), contracts/deployments/<chainId>.json (주소)
 
-export const CHAIN_ID = 31337
+type Deployment = { MockUSD: `0x${string}`; Escrow: `0x${string}`; startBlock: bigint }
 
-export const MOCK_USD_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3' as const
-export const ESCROW_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' as const
+/** chainId → 배포 주소. 어느 체인을 쓸지는 src/network.ts 가 정한다. */
+export const DEPLOYMENTS: Partial<Record<number, Deployment>> = {
+  31337: { MockUSD: '0x5FbDB2315678afecb367f032d93F642f64180aa3', Escrow: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512', startBlock: 0n },
+}
 
 export const mockUsdAbi = [
   {

@@ -1,9 +1,10 @@
 import type { TxState } from '../hooks/useTx'
 import { formatFee, formatGas } from '../lib/gas'
+import { EXPLORER_URL, NETWORK_NAME } from '../network'
 
 const MESSAGES: Record<TxState['phase'], string> = {
   idle: '',
-  switching: 'MetaMask에서 Anvil 네트워크로 전환(또는 추가)을 승인해 주세요…',
+  switching: `MetaMask에서 ${NETWORK_NAME} 네트워크로 전환(또는 추가)을 승인해 주세요…`,
   simulating: '실행 결과를 미리 확인하는 중… (읽기 · 가스 없음)',
   signing: 'MetaMask 창에서 확인(서명)해 주세요…',
   pending: '전송 완료! 블록에 담기기를 기다리는 중…',
@@ -31,7 +32,17 @@ export function TxStatus({ state, successText }: { state: TxState; successText?:
       )}
       {state.hash && (
         <div className="muted mono small" title={state.hash}>
-          tx: {state.hash.slice(0, 10)}…{state.hash.slice(-8)}
+          tx:{' '}
+          {/* Sepolia에서는 Etherscan에서 누구나 이 트랜잭션을 확인할 수 있다 */}
+          {EXPLORER_URL ? (
+            <a href={`${EXPLORER_URL}/tx/${state.hash}`} target="_blank" rel="noreferrer">
+              {state.hash.slice(0, 10)}…{state.hash.slice(-8)} ↗
+            </a>
+          ) : (
+            <>
+              {state.hash.slice(0, 10)}…{state.hash.slice(-8)}
+            </>
+          )}
         </div>
       )}
     </div>

@@ -8,7 +8,9 @@ import {Escrow} from "../src/Escrow.sol";
 
 /// @notice MockUSD와 Escrow를 배포하고, 주소를 deployments/<chainId>.json에 기록한다.
 /// @dev 실행:
-///   forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --private-key <Anvil 0번 키>
+///   Anvil  : forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --private-key <Anvil 0번 키>
+///   Sepolia: forge script script/Deploy.s.sol --rpc-url sepolia --broadcast --account dev
+///            (--account: `cast wallet import dev --interactive`로 만든 암호화 키스토어. 개인키를 명령에 직접 적지 않는다)
 ///   --broadcast가 없으면 "모의 실행"만 하고 실제 트랜잭션은 보내지 않는다.
 contract Deploy is Script {
     function run() external {
@@ -21,6 +23,10 @@ contract Deploy is Script {
 
         // startBroadcast~stopBroadcast 사이의 "쓰기" 호출은 각각 실제 서명된 트랜잭션이 되어 체인에 전송된다.
         // 컨트랙트 배포도 트랜잭션이다. (받는 주소(to)가 비어 있고 data에 바이트코드가 담긴 특별한 트랜잭션)
+        // 웹 화면이 이벤트 로그를 "이 블록부터" 찾게 하려고 배포 직전 블록 번호를 기록한다.
+        // (실제 배포 트랜잭션은 이 블록 이후에 담기므로 안전한 시작점이다)
+        uint256 startBlock = block.number;
+
         vm.startBroadcast();
 
         MockUSD token = new MockUSD(); // 트랜잭션 1 (배포자 nonce 0)
@@ -41,6 +47,7 @@ contract Deploy is Script {
         }
         string memory obj = "deployments";
         vm.serializeUint(obj, "chainId", block.chainid);
+        vm.serializeUint(obj, "startBlock", startBlock);
         vm.serializeAddress(obj, "MockUSD", address(token));
         string memory json = vm.serializeAddress(obj, "Escrow", address(escrow));
         vm.writeJson(json, string.concat("./deployments/", vm.toString(block.chainid), ".json"));

@@ -1,5 +1,6 @@
 import { useAccount } from 'wagmi'
-import { MOCK_USD_ADDRESS, mockUsdAbi } from '../contracts/generated'
+import { mockUsdAbi } from '../contracts/generated'
+import { IS_LOCAL, MOCK_USD_ADDRESS } from '../network'
 import { useTx } from '../hooks/useTx'
 import { TxStatus } from './TxStatus'
 
@@ -14,7 +15,10 @@ export function Faucet() {
         테스트 코인 받기 <span className="tag write">쓰기 · 트랜잭션</span>
       </h2>
       <p className="muted small">
-        누를 때마다 내 주소로 1,000 mUSD가 새로 발행돼요. 가스(ETH)는 Anvil 테스트 계정에 넉넉히 있어요.
+        누를 때마다 내 주소로 1,000 mUSD가 새로 발행돼요.{' '}
+        {IS_LOCAL
+          ? '가스(ETH)는 Anvil 테스트 계정에 넉넉히 있어요.'
+          : '가스로 쓸 Sepolia ETH는 Sepolia faucet에서 따로 받아야 해요.'}
       </p>
       <button
         className="primary"

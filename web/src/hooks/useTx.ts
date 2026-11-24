@@ -3,14 +3,14 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAccount, useConfig } from 'wagmi'
 import { simulateContract, switchChain, waitForTransactionReceipt, writeContract } from 'wagmi/actions'
 import type { Abi, Address, Hash, TransactionReceipt } from 'viem'
-import { anvil } from 'wagmi/chains'
+import { IS_LOCAL, NETWORK_NAME, TARGET_CHAIN } from '../network'
 import { mockUsdAbi } from '../contracts/generated'
 import { toKoreanError } from '../lib/errors'
 
 /**
  * 트랜잭션(쓰기) 한 번의 진행 상태.
  *   idle        아직 아무것도 안 함
- *   switching   MetaMask 네트워크가 Anvil이 아니라서 전환을 요청하는 중
+ *   switching   MetaMask 네트워크가 대상 체인(Anvil/Sepolia)이 아니라서 전환을 요청하는 중
  *   simulating  [읽기] 노드에게 "실행하면 성공해?"를 미리 물어보는 중 (가스 없음, 서명 없음)
  *   signing     MetaMask 창에서 사용자의 서명을 기다리는 중
  *   pending     전송 완료. 블록에 담기기를 기다리는 중
@@ -55,12 +55,12 @@ export function useTx() {
       setState({ phase: 'error', error: '먼저 지갑을 연결해 주세요.' })
       return
     }
-    // ⓪ MetaMask가 다른 네트워크(예: 이더리움 메인넷)에 있으면 Anvil로 전환부터 요청한다.
+    // ⓪ MetaMask가 다른 네트워크(예: 이더리움 메인넷)에 있으면 대상 체인으로 전환부터 요청한다.
     //    서명은 "어느 체인용 트랜잭션인지(chainId)"까지 포함하므로, 네트워크가 다르면 보낼 수 없다.
-    if (chainId !== anvil.id) {
+    if (chainId !== TARGET_CHAIN.id) {
       try {
         setState({ phase: 'switching' })
-        await switchChain(config, { chainId: anvil.id })
+        await switchChain(config, { chainId: TARGET_CHAIN.id })
       } catch (err) {
         setState({ phase: 'error', error: toKoreanError(err, 'switch') })
         return
@@ -74,10 +74,10 @@ export function useTx() {
         ...req,
         abi: [...req.abi, ...tokenErrors],
         account,
-        chainId: anvil.id,
+        chainId: TARGET_CHAIN.id,
       })
 
-      // ② ③ MetaMask가 서명 창을 띄우고, 승인하면 서명된 트랜잭션을 Anvil에 전송한다.
+      // ② ③ MetaMask가 서명 창을 띄우고, 승인하면 서명된 트랜잭션을 노드에 전송한다.
       setState({ phase: 'signing' })
       const hash = await writeContract(config, request)
 
@@ -85,11 +85,15 @@ export function useTx() {
       setState({ phase: 'pending', hash })
       // 로컬 Anvil은 보통 1초 안에 블록에 담는다. 15초가 지나도 안 되면 거의 항상 nonce 꼬임
       // (Anvil을 재시작했는데 MetaMask가 예전 nonce로 보내서, Anvil이 앞 번호를 기다리며 대기열에 넣어 둔 상태)이다.
-      const receipt = await waitForTransactionReceipt(config, { hash, chainId: anvil.id, timeout: 15_000 }).catch(
+      // Sepolia는 블록이 12초마다 생기고, 가스 가격이 낮게 잡히면 몇 분씩 기다리기도 해서 3분까지 기다린다.
+      const timeout = IS_LOCAL ? 15_000 : 180_000
+      const receipt = await waitForTransactionReceipt(config, { hash, chainId: TARGET_CHAIN.id, timeout }).catch(
         (err: unknown) => {
           if (err instanceof Error && err.name === 'WaitForTransactionReceiptTimeoutError') {
             throw new Error(
-              '15초가 지나도 블록에 담기지 않았어요. Anvil을 재시작해서 MetaMask가 예전 nonce로 보낸 것 같아요. 터미널의 web/ 폴더에서 `npm run fix-nonce`를 실행하고 새로고침해 주세요. (또는 MetaMask 설정에서 "논스"를 검색해 "활동 및 논스 데이터 지우기")',
+              IS_LOCAL
+                ? '15초가 지나도 블록에 담기지 않았어요. Anvil을 재시작해서 MetaMask가 예전 nonce로 보낸 것 같아요. 터미널의 web/ 폴더에서 `npm run fix-nonce`를 실행하고 새로고침해 주세요. (또는 MetaMask 설정에서 "논스"를 검색해 "활동 및 논스 데이터 지우기")'
+                : `3분이 지나도 ${NETWORK_NAME} 블록에 담기지 않았어요. 네트워크가 붐비는 중일 수 있어요. 아래 tx 링크(Etherscan)에서 상태를 확인하고, 담기면 새로고침해 주세요.`,
             )
           }
           throw err

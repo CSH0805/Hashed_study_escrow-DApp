@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAccount, useReadContract, useReadContracts } from 'wagmi'
-import { ESCROW_ADDRESS, escrowAbi } from '../contracts/generated'
+import { escrowAbi } from '../contracts/generated'
+import { ESCROW_ADDRESS } from '../network'
 import { STATUS_LABEL, formatMusd, formatTime, shortAddress } from '../lib/format'
 
 type Tab = 'buyer' | 'seller'

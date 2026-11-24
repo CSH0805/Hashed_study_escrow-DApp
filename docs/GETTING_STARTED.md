@@ -1,5 +1,7 @@
 # 실행 방법
 
+> 로컬 Anvil에서 실행하는 방법입니다. Sepolia 테스트넷에 올리는 방법은 [SEPOLIA.md](SEPOLIA.md)를 보세요.
+
 이 디앱을 내 컴퓨터에서 띄우고 MetaMask로 시연하는 방법입니다.
 소개는 [README.md](../README.md), 구조와 로직은 [TECHNICAL.md](TECHNICAL.md)를 보세요.
 

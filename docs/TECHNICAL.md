@@ -180,12 +180,13 @@ permit 서명이 안전한 이유:
 
 ### 컨트랙트 연결
 
-[`web/scripts/sync-contracts.mjs`](../web/scripts/sync-contracts.mjs)(`npm run sync`)가 Foundry 컴파일 결과의 ABI와 `deployments/31337.json`의 주소를 [`web/src/contracts/generated.ts`](../web/src/contracts/generated.ts)로 복사합니다. ABI를 `as const`로 저장해서 wagmi/viem이 함수 이름·인자 타입을 추론하고, 오타를 코드 작성 단계에서 잡아 줍니다.
+[`web/scripts/sync-contracts.mjs`](../web/scripts/sync-contracts.mjs)(`npm run sync`)가 Foundry 컴파일 결과의 ABI와 `deployments/<chainId>.json`(31337=Anvil, 11155111=Sepolia)의 주소·배포 블록을 [`web/src/contracts/generated.ts`](../web/src/contracts/generated.ts)로 복사합니다. ABI를 `as const`로 저장해서 wagmi/viem이 함수 이름·인자 타입을 추론하고, 오타를 코드 작성 단계에서 잡아 줍니다.
 
 [`wagmi.ts`](../web/src/wagmi.ts) 설정:
-- 체인: `anvil`(31337) 하나만
+- 체인: 하나만. [`network.ts`](../web/src/network.ts)가 Vite mode로 고름 — `npm run dev` → `anvil`(31337), `npm run dev:sepolia` → `sepolia`(11155111)
 - 지갑: `injected({ target: 'metaMask' })`만, `multiInjectedProviderDiscovery: false`
-- 읽기 통로: `http('http://127.0.0.1:8545')`, 새 블록 확인 주기 1초
+- 읽기 통로: Anvil `http://127.0.0.1:8545`(1초 주기) / Sepolia 공개 RPC(4초 주기, `VITE_SEPOLIA_RPC_URL`로 교체 가능)
+- 화면 코드는 `anvil`·`31337`을 직접 쓰지 않고 `network.ts`의 `TARGET_CHAIN`, `IS_LOCAL`, 주소 상수만 씀. Sepolia에서는 tx 해시가 Etherscan 링크가 되고, Anvil 전용 nonce 안내는 나오지 않음. 자세한 배포 방법은 [SEPOLIA.md](SEPOLIA.md)
 
 ### 쓰기 흐름 — [`useTx`](../web/src/hooks/useTx.ts)
 

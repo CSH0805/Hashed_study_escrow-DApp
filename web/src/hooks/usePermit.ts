@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { parseSignature, type Address, type Hex } from 'viem'
 import { useAccount, useConfig, useReadContract } from 'wagmi'
 import { signTypedData, switchChain } from 'wagmi/actions'
-import { anvil } from 'wagmi/chains'
-import { ESCROW_ADDRESS, MOCK_USD_ADDRESS, mockUsdAbi } from '../contracts/generated'
+import { mockUsdAbi } from '../contracts/generated'
+import { ESCROW_ADDRESS, MOCK_USD_ADDRESS, TARGET_CHAIN } from '../network'
 import { toKoreanError } from '../lib/errors'
 import type { TxState } from './useTx'
 
@@ -59,11 +59,11 @@ export function usePermitSign() {
       setState({ phase: 'error', error: '지갑 연결과 토큰 정보를 확인하는 중이에요. 잠시 후 다시 눌러 주세요.' })
       return
     }
-    // 서명 도메인에 chainId(31337)가 들어가므로 MetaMask도 Anvil에 있어야 서명해 준다.
-    if (chainId !== anvil.id) {
+    // 서명 도메인에 chainId가 들어가므로 MetaMask도 같은 체인(Anvil/Sepolia)에 있어야 서명해 준다.
+    if (chainId !== TARGET_CHAIN.id) {
       try {
         setState({ phase: 'switching' })
-        await switchChain(config, { chainId: anvil.id })
+        await switchChain(config, { chainId: TARGET_CHAIN.id })
       } catch (err) {
         setState({ phase: 'error', error: toKoreanError(err, 'switch') })
         return

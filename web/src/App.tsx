@@ -6,6 +6,7 @@ import { Faucet } from './components/Faucet'
 import { CreateDeal } from './components/CreateDeal'
 import { DealList } from './components/DealList'
 import { DealDetail } from './components/DealDetail'
+import { NETWORK_NAME, NOT_DEPLOYED, TARGET_CHAIN } from './network'
 
 export default function App() {
   const { address } = useAccount()
@@ -25,6 +26,21 @@ export default function App() {
       predicate: (q) => ['readContract', 'readContracts', 'dealEvents'].includes(q.queryKey[0] as string),
     })
   }, [blockNumber, queryClient])
+
+  // 이 네트워크에 컨트랙트가 아직 없으면 버튼을 눌러도 실패만 하므로 안내만 보여준다.
+  if (NOT_DEPLOYED) {
+    return (
+      <div className="container">
+        <section className="card">
+          <h2>{NETWORK_NAME}에 아직 배포되지 않았어요</h2>
+          <p className="small">
+            contracts/deployments/{TARGET_CHAIN.id}.json 이 없어요. 컨트랙트를 {NETWORK_NAME}에 배포한 뒤 web/ 폴더에서{' '}
+            <code>npm run sync</code> 를 실행하고 새로고침해 주세요. (docs/SEPOLIA.md 참고)
+          </p>
+        </section>
+      </div>
+    )
+  }
 
   return (
     <div className="container">

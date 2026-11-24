@@ -5,6 +5,9 @@ import {
   UnauthorizedProviderError,
   UserRejectedRequestError,
 } from 'viem'
+import { IS_LOCAL, NETWORK_NAME, TARGET_CHAIN } from '../network'
+
+const WRONG_CHAIN = `MetaMask의 네트워크가 ${NETWORK_NAME}(${TARGET_CHAIN.id})이 아니에요. 상단의 "${NETWORK_NAME}로 전환" 버튼을 눌러 주세요.`
 
 /**
  * 컨트랙트의 custom error 이름 → 한국어 안내.
@@ -35,15 +38,15 @@ export function toKoreanError(err: unknown, context: 'tx' | 'connect' | 'switch'
     // 1) 사용자가 MetaMask 창에서 "거부"를 누르거나 창을 닫은 경우 (EIP-1193 오류 코드 4001)
     if (err.walk((e) => e instanceof UserRejectedRequestError) || err.name === 'UserRejectedRequestError') {
       if (context === 'connect') return '지갑 연결 요청을 거절했어요(또는 창을 닫았어요). 다시 "지갑 연결"을 눌러 주세요.'
-      if (context === 'switch') return 'Anvil 네트워크 전환을 거절했어요. 전환해야 트랜잭션을 보낼 수 있어요.'
+      if (context === 'switch') return `${NETWORK_NAME} 네트워크 전환을 거절했어요. 전환해야 트랜잭션을 보낼 수 있어요.`
       return '지갑에서 서명을 거절했어요. 트랜잭션이 전송되지 않았으니 가스도 나가지 않았어요.'
     }
     // EIP-1193 오류 코드 4100: 이 사이트에 해당 계정/네트워크 권한을 주지 않음
     if (err.walk((e) => e instanceof UnauthorizedProviderError)) {
-      return 'MetaMask가 이 사이트에 계정 또는 Anvil 네트워크 사용을 허용하지 않았어요. MetaMask 아래쪽 "localhost:5173" 연결 설정에서 계정과 Anvil 네트워크를 허용해 주세요.'
+      return `MetaMask가 이 사이트에 계정 또는 ${NETWORK_NAME} 네트워크 사용을 허용하지 않았어요. MetaMask의 이 사이트 연결 설정에서 계정과 ${NETWORK_NAME} 네트워크를 허용해 주세요.`
     }
     if (err.walk((e) => e instanceof ChainMismatchError)) {
-      return 'MetaMask의 네트워크가 Anvil(31337)이 아니에요. 상단의 "Anvil로 전환" 버튼을 눌러 주세요.'
+      return WRONG_CHAIN
     }
 
     // 2) 컨트랙트가 revert한 경우 → custom error 이름으로 안내
@@ -56,16 +59,21 @@ export function toKoreanError(err: unknown, context: 'tx' | 'connect' | 'switch'
     // 3) 자주 막히는 환경 문제
     const msg = `${err.shortMessage} ${err.details ?? ''}`.toLowerCase()
     if (msg.includes('insufficient funds')) {
-      return '가스비로 낼 ETH가 없어요. MetaMask에서 Anvil 테스트 계정(구매자/판매자)을 선택했는지 확인해 주세요.'
+      return IS_LOCAL
+        ? '가스비로 낼 ETH가 없어요. MetaMask에서 Anvil 테스트 계정(구매자/판매자)을 선택했는지 확인해 주세요.'
+        : '가스비로 낼 Sepolia ETH가 없어요. Sepolia faucet에서 이 계정으로 테스트 ETH를 받아 주세요.'
     }
     if (msg.includes('nonce')) {
+      if (!IS_LOCAL) return 'nonce가 맞지 않아요. 앞서 보낸 트랜잭션이 아직 대기 중일 수 있어요. 잠시 기다렸다가 다시 시도해 주세요.'
       return 'nonce가 맞지 않아요. Anvil을 재시작했다면 web/ 폴더에서 `npm run fix-nonce`를 실행하거나, MetaMask 설정에서 "논스"를 검색해 "활동 및 논스 데이터 지우기"를 눌러 주세요.'
     }
     if (msg.includes('fetch') || msg.includes('http request failed') || msg.includes('econnrefused')) {
-      return 'Anvil 노드(127.0.0.1:8545)에 연결할 수 없어요. 터미널에서 anvil이 켜져 있는지 확인해 주세요.'
+      return IS_LOCAL
+        ? 'Anvil 노드(127.0.0.1:8545)에 연결할 수 없어요. 터미널에서 anvil이 켜져 있는지 확인해 주세요.'
+        : 'Sepolia 노드(RPC)에 연결할 수 없어요. 공개 노드가 잠시 막혔을 수 있으니 잠시 후 새로고침해 주세요.'
     }
     if (msg.includes('chain') && msg.includes('match')) {
-      return 'MetaMask의 네트워크가 Anvil(31337)이 아니에요. 상단의 "Anvil로 전환" 버튼을 눌러 주세요.'
+      return WRONG_CHAIN
     }
     return err.shortMessage
   }

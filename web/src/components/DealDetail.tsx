@@ -1,5 +1,6 @@
 import { useAccount, useReadContract } from 'wagmi'
-import { ESCROW_ADDRESS, escrowAbi } from '../contracts/generated'
+import { escrowAbi } from '../contracts/generated'
+import { ESCROW_ADDRESS } from '../network'
 import { STATUS, STATUS_LABEL, formatDuration, formatMusd, formatTime } from '../lib/format'
 import { toKoreanError } from '../lib/errors'
 import { useChainNow } from '../hooks/useChainNow'

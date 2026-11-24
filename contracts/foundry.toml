@@ -16,4 +16,10 @@ remappings = [
 # (스크립트가 아무 파일이나 건드리지 못하도록 Foundry는 기본적으로 파일 접근을 막아 둔다)
 fs_permissions = [{ access = "write", path = "./deployments" }]
 
+# --rpc-url 에 이름으로 쓸 수 있는 노드 주소. (forge script ... --rpc-url sepolia)
+# Sepolia는 무료 공개 RPC를 기본으로 쓴다. 느리면 Alchemy/Infura 주소로 바꿔도 된다(키가 들어가면 커밋 주의).
+[rpc_endpoints]
+anvil = "http://127.0.0.1:8545"
+sepolia = "https://ethereum-sepolia-rpc.publicnode.com"
+
 # 더 많은 설정: https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
