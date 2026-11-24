@@ -22,7 +22,7 @@ export default function App() {
   const { data: blockNumber } = useBlockNumber({ watch: true })
   useEffect(() => {
     queryClient.invalidateQueries({
-      predicate: (q) => q.queryKey[0] === 'readContract' || q.queryKey[0] === 'readContracts',
+      predicate: (q) => ['readContract', 'readContracts', 'dealEvents'].includes(q.queryKey[0] as string),
     })
   }, [blockNumber, queryClient])
 

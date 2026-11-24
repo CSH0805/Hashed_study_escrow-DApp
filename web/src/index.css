@@ -103,3 +103,13 @@ footer { text-align: center; }
 @media (max-width: 560px) {
   .deals th:nth-child(4), .deals td:nth-child(4) { display: none; }
 }
+
+/* 거래 내역 타임라인 */
+.timeline { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+.timeline h3 { font-size: 15px; margin: 0 0 8px; display: flex; gap: 8px; align-items: center; }
+.timeline ol { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--border); display: grid; gap: 12px; }
+.timeline li { position: relative; display: grid; gap: 2px; }
+.timeline li::before {
+  content: ''; position: absolute; left: -20px; top: 6px; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--primary);
+}

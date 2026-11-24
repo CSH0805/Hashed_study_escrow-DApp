@@ -1,4 +1,5 @@
 import type { TxState } from '../hooks/useTx'
+import { formatFee, formatGas } from '../lib/gas'
 
 const MESSAGES: Record<TxState['phase'], string> = {
   idle: '',
@@ -18,6 +19,12 @@ export function TxStatus({ state }: { state: TxState }) {
       <div>
         {state.phase === 'error' ? `❌ ${state.error ?? MESSAGES.error}` : MESSAGES[state.phase]}
       </div>
+      {/* 성공했을 때만: 영수증에 적힌 실제 비용 */}
+      {state.phase === 'success' && state.gasUsed !== undefined && state.fee !== undefined && (
+        <div className="small">
+          ⛽ 블록 #{state.blockNumber?.toString()} · 가스 {formatGas(state.gasUsed)} 사용 · 수수료 {formatFee(state.fee)}
+        </div>
+      )}
       {state.hash && (
         <div className="muted mono small" title={state.hash}>
           tx: {state.hash.slice(0, 10)}…{state.hash.slice(-8)}

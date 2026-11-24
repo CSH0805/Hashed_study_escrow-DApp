@@ -23,6 +23,10 @@ export type TxState = {
   phase: TxPhase
   hash?: Hash
   error?: string
+  /** 성공 시 영수증에서 꺼낸 실제 사용 가스량과 수수료(wei) — 10강 가스 */
+  gasUsed?: bigint
+  fee?: bigint
+  blockNumber?: bigint
 }
 
 type TxRequest = {
@@ -85,7 +89,14 @@ export function useTx() {
         return
       }
 
-      setState({ phase: 'success', hash })
+      // 실제 수수료 = 사용한 가스량(gasUsed) × 실제 가스 가격(effectiveGasPrice)
+      setState({
+        phase: 'success',
+        hash,
+        gasUsed: receipt.gasUsed,
+        fee: receipt.gasUsed * receipt.effectiveGasPrice,
+        blockNumber: receipt.blockNumber,
+      })
       // ⑤ 잔고·거래 목록 등 [읽기] 값들을 다시 읽어 오게 한다.
       await queryClient.invalidateQueries()
       return receipt

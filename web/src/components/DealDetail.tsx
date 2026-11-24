@@ -5,6 +5,7 @@ import { toKoreanError } from '../lib/errors'
 import { useChainNow } from '../hooks/useChainNow'
 import { useTx } from '../hooks/useTx'
 import { TxStatus } from './TxStatus'
+import { DealTimeline } from './DealTimeline'
 
 /**
  * 거래 상세: "내 역할 × 거래 상태"에 맞는 버튼만 보여준다.
@@ -105,6 +106,8 @@ export function DealDetail({ id }: { id: bigint }) {
       {funded && role === '제3자' && <p className="muted">이 거래의 당사자가 아니라 조회만 할 수 있어요.</p>}
 
       <TxStatus state={tx.state} />
+
+      <DealTimeline id={id} />
     </section>
   )
 }
