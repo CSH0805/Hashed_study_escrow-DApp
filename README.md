@@ -31,9 +31,9 @@
 
 | 폴더 | 내용 |
 |---|---|
-| [`contracts/src/MockUSD.sol`](contracts/src/MockUSD.sol) | 테스트용 스테이블코인. ERC-20, 소수점 6자리(USDC와 동일), `faucet()`으로 1,000 mUSD 지급 |
+| [`contracts/src/MockUSD.sol`](contracts/src/MockUSD.sol) | 테스트용 스테이블코인. ERC-20 + permit(EIP-2612), 소수점 6자리(USDC와 동일), `faucet()`으로 1,000 mUSD 지급 |
 | [`contracts/src/Escrow.sol`](contracts/src/Escrow.sol) | 에스크로 본체. 거래 생성·구매확정·환불·마감 후 지급 |
-| [`contracts/test/`](contracts/test/) | Foundry 테스트 31개 (정상 흐름, 규칙 위반, 퍼즈, 재진입 공격) |
+| [`contracts/test/`](contracts/test/) | Foundry 테스트 41개 (정상 흐름, 규칙 위반, 퍼즈, 재진입 공격, permit 서명 위조·만료·재사용·front-running) |
 | [`contracts/script/Deploy.s.sol`](contracts/script/Deploy.s.sol) | 배포 스크립트. 주소를 `contracts/deployments/31337.json`에 기록 |
 | [`web/src/`](web/src/) | 웹 화면 |
 | [`web/scripts/sync-contracts.mjs`](web/scripts/sync-contracts.mjs) | 컨트랙트 ABI·배포 주소를 `web/src/contracts/generated.ts`로 복사 |
@@ -54,6 +54,7 @@
 | 함수 | 종류 | 누가 | 하는 일 |
 |---|---|---|---|
 | `createDeal(seller, amount, deadline, description)` | 쓰기 | 구매자 | 미리 `approve`받은 mUSD를 `transferFrom`으로 예치하고 거래 생성 |
+| `createDealWithPermit(…, permitDeadline, v, r, s)` | 쓰기 | 구매자 | permit 서명으로 승인과 예치를 트랜잭션 한 번에 처리 |
 | `release(id)` | 쓰기 | 구매자 | 구매확정 → 판매자에게 지급 |
 | `refund(id)` | 쓰기 | 판매자 | 거래 취소 → 구매자에게 환불 |
 | `claimAfterDeadline(id)` | 쓰기 | 판매자 | 마감이 지났으면 판매자가 직접 받아 감 |
@@ -62,7 +63,17 @@
 
 - **규칙**: 끝난 거래 재처리 불가, 금액 0 불가, 판매자 = 구매자 불가, 판매자 0 주소 불가, 마감이 과거면 불가
 - **보안**: SafeERC20, ReentrancyGuard(`nonReentrant`), checks → effects → interactions 순서, custom error
-- **이벤트**: `DealCreated`, `DealReleased`, `DealRefunded`
+- **이벤트**: `DealCreated`, `DealReleased`, `DealRefunded` — 화면의 "거래 내역" 타임라인이 이 로그를 읽어 블록 번호·시각·서명자·가스비를 보여 줌
+
+### 거래를 만드는 두 가지 방식
+
+| | 방식 A: approve | 방식 B: permit (EIP-2612) |
+|---|---|---|
+| 1단계 | `approve` **트랜잭션** (가스, 블록에 기록) | EIP-712 **서명만** (가스 0, 네트워크에 안 보냄) |
+| 2단계 | `createDeal` 트랜잭션 | `createDealWithPermit` 트랜잭션 (서명 v·r·s를 실어 보냄 → 컨트랙트가 검증 후 승인 처리) |
+| 트랜잭션 수 | 2번 | 1번 |
+
+permit 서명에는 토큰 이름·버전·체인 ID·토큰 주소(도메인)와 nonce·유효기한이 묶여 있어서 다른 체인·다른 토큰·재사용·기한 초과가 모두 막힙니다. 서명은 누구나 볼 수 있어 공격자가 먼저 `permit()`을 제출(front-running)할 수 있는데, 이 경우에도 거래가 실패하지 않도록 `try/catch`로 처리합니다.
 
 ### 읽기 vs 쓰기
 
@@ -197,11 +208,11 @@ cast nonce $B && cast block-number                               # 둘 다 1씩 
 | 강의 | 이 프로젝트에서 |
 |---|---|
 | 01 Blockchain Overview | 블록체인 = 누구나 읽을 수 있는 공유 원장. 은행 원장 DB 대신 Anvil 노드가 장부를 보관 |
-| 02 Cryptography | MetaMask가 개인키로 서명 → 서명에서 복원한 주소가 `msg.sender`. 화면은 키를 볼 수 없음. Foundry 설치 시 바이너리 해시·서명 검증 |
+| 02 Cryptography | MetaMask가 개인키로 서명 → 서명에서 복원한 주소가 `msg.sender`. permit은 트랜잭션이 아닌 "메시지" 서명(EIP-712)을 컨트랙트가 `ecrecover`로 직접 검증. 화면은 키를 볼 수 없음. Foundry 설치 시 바이너리 해시·서명 검증 |
 | 04 Bitcoin Transactions (UTXO) | 비트코인은 UTXO 조각을 모아 잔고 계산, ERC-20은 `주소 → 숫자` 표를 직접 수정(계정 모델) |
 | 07 Bitcoin Consensus / 12 Ethereum Consensus | Anvil은 노드가 하나뿐이라 합의 없이 tx마다 즉시 블록 생성, 시간도 조작 가능. 실제 이더리움은 12초 슬롯·검증자 투표로 확정되어 `block.timestamp`를 며칠씩 당길 수 없음 |
 | 09 Ethereum Introduction (EVM) | Solidity → EVM 바이트코드 컴파일. EVM에는 소수가 없어 `decimals`(6) 약속으로 금액 표시 (1 mUSD = 1,000,000) |
-| 10 Accounts, Transactions, Blocks | EOA(구매자·판매자) vs 컨트랙트 계정(MockUSD·Escrow). approve + createDeal = 서로 다른 컨트랙트에 보내는 2개의 tx(서명·가스·nonce 각각). 실패하면 전체 revert(원자성)되지만 가스는 소모. 배포도 트랜잭션, 배포 주소는 배포자 주소 + nonce로 결정 |
+| 10 Accounts, Transactions, Blocks | EOA(구매자·판매자) vs 컨트랙트 계정(MockUSD·Escrow). 수수료 = gasUsed × effectiveGasPrice (EIP-1559 base fee가 한산한 블록에서 내려감), storage를 처음 채우는 첫 거래가 가장 비쌈. 이벤트 로그는 영수증에 남아 과거 기록 조회에 쓰임. approve + createDeal = 서로 다른 컨트랙트에 보내는 2개의 tx(서명·가스·nonce 각각). 실패하면 전체 revert(원자성)되지만 가스는 소모. 배포도 트랜잭션, 배포 주소는 배포자 주소 + nonce로 결정 |
 | 11 Smart Contracts & DApps | 중개 회사 대신 코드가 돈을 보관. 버튼 숨기기는 편의일 뿐, 권한 검사는 컨트랙트(`NotBuyer`, `NotSeller`)가 담당. 블록체인에는 타이머가 없어 "자동 지급"도 누군가 tx를 보내야 실행됨 |
 | 13 Blockchain Applications | 실제 USDC도 같은 ERC-20 구조(발행 권한만 Circle에 제한). 이 구조에 감사·분쟁 중재·수수료를 더하면 실서비스형 에스크로 |
 

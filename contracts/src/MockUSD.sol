@@ -11,12 +11,16 @@ pragma solidity ^0.8.20;
 // 잔고 기록(balanceOf), 송금(transfer), 승인(approve), 대리 송금(transferFrom) 같은
 // ERC-20 표준 기능을 직접 짜지 않고 감사(audit)받은 코드를 그대로 상속해서 쓴다.
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// ERC20Permit(EIP-2612): approve를 "트랜잭션" 대신 "서명"으로 할 수 있게 해 주는 확장.
+// 토큰 주인이 지갑에서 가스 없이 서명만 하면, 다른 사람(여기선 Escrow)이 그 서명을 제출해 approve를 대신 처리한다.
+// 실제 USDC도 이 기능을 지원한다.
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 /// @title MockUSD (mUSD)
 /// @notice 로컬 테스트용 가짜 달러 스테이블코인.
 ///         실제 USDC는 발행사(Circle)만 발행할 수 있지만, 이 토큰은 공부용이라
 ///         누구나 faucet()으로 받아 갈 수 있게 만들었다. 실제 가치는 전혀 없다.
-contract MockUSD is ERC20 {
+contract MockUSD is ERC20, ERC20Permit {
     /// @notice faucet() 한 번에 받는 양: 1,000 mUSD
     /// @dev 소수점 6자리이므로 "1 mUSD" = 1_000_000(10**6) 이라는 정수로 저장된다.
     ///      블록체인(EVM)에는 소수(float)가 없어서, 모든 금액을 "가장 작은 단위의 정수"로 다룬다.
@@ -33,7 +37,9 @@ contract MockUSD is ERC20 {
     /// @dev 생성자(constructor): 배포 트랜잭션이 실행될 때 딱 한 번만 실행된다.
     ///      부모 ERC20의 생성자에 이름과 심볼을 넘겨준다.
     ///      처음 발행량은 0이다. 토큰은 faucet()으로만 생긴다.
-    constructor() ERC20("Mock USD", "mUSD") {}
+    ///      ERC20Permit("Mock USD"): 서명 "도메인"의 이름. 서명에 [토큰 이름·버전·체인ID·토큰 주소]가 함께 들어가서
+    ///      다른 토큰이나 다른 체인(메인넷 등)에서 같은 서명을 재사용할 수 없게 된다.
+    constructor() ERC20("Mock USD", "mUSD") ERC20Permit("Mock USD") {}
 
     /// @notice 토큰의 소수점 자릿수. USDC와 같게 6으로 맞춘다.
     /// @dev [읽기 / view] 상태를 바꾸지 않는 함수라 호출해도 가스가 들지 않는다.

@@ -49,4 +49,15 @@ contract MockUSDTest is Test {
 
         assertEq(token.balanceOf(alice), 3_000 * 1e6);
     }
+
+    /// permit(EIP-2612) 서명 도메인: 지갑이 서명 창에 보여 주고, 서명에 함께 묶이는 정보
+    function test_PermitDomain() public view {
+        (, string memory name, string memory version, uint256 chainId, address verifyingContract,,) =
+            token.eip712Domain();
+        assertEq(name, "Mock USD");
+        assertEq(version, "1");
+        assertEq(chainId, block.chainid); // 다른 체인에서 같은 서명 재사용 불가
+        assertEq(verifyingContract, address(token)); // 다른 토큰에서 같은 서명 재사용 불가
+        assertEq(token.nonces(alice), 0);
+    }
 }

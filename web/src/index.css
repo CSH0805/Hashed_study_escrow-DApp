@@ -113,3 +113,8 @@ footer { text-align: center; }
   content: ''; position: absolute; left: -20px; top: 6px; width: 10px; height: 10px;
   border-radius: 50%; background: var(--primary);
 }
+
+/* 서명(트랜잭션 아님) 태그, 방식 선택 */
+.tag.sign { color: var(--ok); }
+.mode { margin: 4px 0 12px; }
+.mode button { font-size: 14px; }

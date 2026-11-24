@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -81,6 +82,7 @@ contract Escrow is ReentrancyGuard {
     error NotSeller(uint256 id);
     error DealNotFunded(uint256 id, Status status); // 이미 끝난 거래
     error DeadlineNotPassed(uint256 id, uint256 deadline, uint256 nowTime);
+    error PermitFailed(); // permit 서명이 틀렸거나, 만료됐거나, 이미 사용됨
 
     constructor(IERC20 token_) {
         token = token_;
@@ -88,12 +90,49 @@ contract Escrow is ReentrancyGuard {
 
     // ─────────────────────────── 쓰기 함수 (트랜잭션, 가스 있음) ───────────────────────────
 
-    /// @notice [쓰기] 구매자가 거래를 만들고 돈을 예치한다.
+    /// @notice [쓰기] 구매자가 거래를 만들고 돈을 예치한다. (방식 A: approve 트랜잭션 → createDeal 트랜잭션)
     /// @dev 이 함수를 부르기 전에 구매자가 token.approve(escrow주소, amount)를 먼저 해 둬야 한다.
     ///      (컨트랙트는 남의 지갑에서 마음대로 돈을 꺼낼 수 없고, "허락된 만큼만" transferFrom으로 가져올 수 있다.)
     function createDeal(address seller, uint256 amount, uint256 deadline, string calldata description)
         external
         nonReentrant
+        returns (uint256 id)
+    {
+        id = _createDeal(seller, amount, deadline, description);
+    }
+
+    /// @notice [쓰기] permit 서명으로 승인과 예치를 트랜잭션 한 번에 처리한다. (방식 B: 서명 → createDealWithPermit 트랜잭션)
+    /// @dev 구매자는 먼저 지갑에서 "Escrow가 내 mUSD를 amount만큼 가져가도 된다"는 EIP-712 서명을 만든다.
+    ///      서명은 체인 밖(지갑 안)에서 만들어지므로 가스가 들지 않고 블록에도 남지 않는다.
+    ///      이 함수가 그 서명(v, r, s)을 토큰의 permit()에 넘기면, 토큰이 서명자를 복원(ecrecover)해서
+    ///      owner(= msg.sender)와 같은지 확인한 뒤 approve를 처리해 준다. 그다음은 createDeal과 똑같다.
+    /// @param permitDeadline 서명의 유효기한(유닉스 초). 지나면 그 서명은 못 쓴다. (거래 마감 deadline과는 다른 값)
+    function createDealWithPermit(
+        address seller,
+        uint256 amount,
+        uint256 deadline,
+        string calldata description,
+        uint256 permitDeadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external nonReentrant returns (uint256 id) {
+        // owner를 msg.sender로 고정: 남의 서명을 주워서 그 사람 돈으로 거래를 만드는 것을 막는다.
+        // (서명은 "owner=구매자"로 만들어졌으므로, 다른 사람이 보내면 서명 검증에서 실패한다)
+        //
+        // try/catch를 쓰는 이유: 서명은 멤풀(대기열)에서 누구나 볼 수 있어서, 공격자가 같은 서명으로
+        // token.permit()을 먼저 호출해 버릴 수 있다(front-running). 그러면 nonce가 이미 쓰여 여기서 permit이 실패한다.
+        // 하지만 그 경우에도 승인 자체는 이미 처리됐으므로, 승인액이 충분하면 그대로 진행한다.
+        try IERC20Permit(address(token)).permit(msg.sender, address(this), amount, permitDeadline, v, r, s) {}
+        catch {
+            if (token.allowance(msg.sender, address(this)) < amount) revert PermitFailed();
+        }
+        id = _createDeal(seller, amount, deadline, description);
+    }
+
+    /// @dev 두 방식이 공통으로 쓰는 거래 생성 로직. checks → effects → interactions 순서.
+    function _createDeal(address seller, uint256 amount, uint256 deadline, string calldata description)
+        private
         returns (uint256 id)
     {
         // ── 1. Checks: 조건 검사. 하나라도 어기면 revert → 트랜잭션 전체가 없던 일이 된다.

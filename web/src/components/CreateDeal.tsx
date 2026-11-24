@@ -5,6 +5,7 @@ import { ESCROW_ADDRESS, MOCK_USD_ADDRESS, escrowAbi, mockUsdAbi } from '../cont
 import { MUSD_DECIMALS, formatMusd } from '../lib/format'
 import { useChainNow } from '../hooks/useChainNow'
 import { useTx, type TxState } from '../hooks/useTx'
+import { usePermitSign } from '../hooks/usePermit'
 import { TxStatus } from './TxStatus'
 
 /** 유닉스 초 → <input type="datetime-local"> 값 ("2026-11-24T15:00", 내 컴퓨터 시간대 기준) */
@@ -24,7 +25,9 @@ function parseAmount(text: string): bigint | undefined {
 }
 
 /**
- * 거래 만들기: 1단계 approve → 2단계 createDeal
+ * 거래 만들기 — 두 가지 방식
+ *   방식 A: 1단계 approve(트랜잭션) → 2단계 createDeal(트랜잭션)          → 트랜잭션 2번
+ *   방식 B: 1단계 permit 서명(가스 없음) → 2단계 createDealWithPermit(트랜잭션) → 트랜잭션 1번
  *
  * 왜 두 번인가?
  *   에스크로 컨트랙트는 내 지갑에서 돈을 마음대로 꺼낼 수 없다.
@@ -37,6 +40,8 @@ export function CreateDeal({ onCreated }: { onCreated: (id: bigint) => void }) {
   const { now } = useChainNow()
   const approveTx = useTx()
   const createTx = useTx()
+  const permit = usePermitSign()
+  const [mode, setMode] = useState<'approve' | 'permit'>('approve')
 
   const [seller, setSeller] = useState('')
   const [amountText, setAmountText] = useState('100')
@@ -72,7 +77,17 @@ export function CreateDeal({ onCreated }: { onCreated: (id: bigint) => void }) {
   }, [address, seller, amount, deadline, now])
 
   const approved = amount !== undefined && amount > 0n && allowance !== undefined && allowance >= amount
-  const busy = approveTx.busy || createTx.busy
+  const busy = approveTx.busy || createTx.busy || permit.busy
+
+  // 방식 B: 지금 가진 서명이 "지금 입력한 금액·지금 계정·현재 nonce·유효기한 내"에 대한 것인지.
+  // 서명은 내용 전체를 묶기 때문에 금액을 1이라도 바꾸면 그 서명은 쓸 수 없다.
+  const sig = permit.signature
+  const signed =
+    !!sig &&
+    sig.owner === address &&
+    sig.amount === amount &&
+    sig.nonce === permit.nonce &&
+    Number(sig.permitDeadline) > now
 
   async function handleApprove() {
     if (amount === undefined) return
@@ -88,15 +103,33 @@ export function CreateDeal({ onCreated }: { onCreated: (id: bigint) => void }) {
     })
   }
 
+  async function handlePermitSign() {
+    if (amount === undefined) return
+    createTx.reset()
+    setCreatedId(undefined)
+    // [서명 · 가스 없음] 서명 유효기한: 체인 시각 기준 20분 뒤 (evm_increaseTime으로 체인 시간이 앞서 있을 수 있어서)
+    await permit.sign(amount, BigInt(now + 20 * 60))
+  }
+
   async function handleCreate() {
     if (amount === undefined) return
     // [쓰기] 에스크로 컨트랙트에 보내는 트랜잭션. 내부에서 transferFrom으로 승인된 mUSD를 가져간다.
-    const receipt = await createTx.send({
-      address: ESCROW_ADDRESS,
-      abi: escrowAbi,
-      functionName: 'createDeal',
-      args: [seller as Address, amount, BigInt(deadline), description],
-    })
+    //   방식 A: createDeal            — 이미 approve된 금액을 사용
+    //   방식 B: createDealWithPermit  — 서명(v, r, s)을 함께 실어 보내서, 컨트랙트 안에서 approve까지 처리
+    const receipt =
+      mode === 'permit' && sig
+        ? await createTx.send({
+            address: ESCROW_ADDRESS,
+            abi: escrowAbi,
+            functionName: 'createDealWithPermit',
+            args: [seller as Address, amount, BigInt(deadline), description, sig.permitDeadline, sig.v, sig.r, sig.s],
+          })
+        : await createTx.send({
+            address: ESCROW_ADDRESS,
+            abi: escrowAbi,
+            functionName: 'createDeal',
+            args: [seller as Address, amount, BigInt(deadline), description],
+          })
     if (!receipt) return
     // 영수증의 이벤트 로그에서 DealCreated를 찾아 새 거래 번호를 알아낸다.
     const [created] = parseEventLogs({ abi: escrowAbi, eventName: 'DealCreated', logs: receipt.logs })
@@ -105,11 +138,29 @@ export function CreateDeal({ onCreated }: { onCreated: (id: bigint) => void }) {
       onCreated(created.args.id)
     }
     approveTx.reset()
+    permit.reset()
+  }
+
+  function switchMode(next: 'approve' | 'permit') {
+    setMode(next)
+    approveTx.reset()
+    createTx.reset()
+    permit.reset()
+    setCreatedId(undefined)
   }
 
   return (
     <section className="card">
       <h2>거래 만들기 (구매자)</h2>
+
+      <div className="tabs mode">
+        <button className={mode === 'approve' ? 'active' : ''} disabled={busy} onClick={() => switchMode('approve')}>
+          방식 A · approve + 예치 (트랜잭션 2번)
+        </button>
+        <button className={mode === 'permit' ? 'active' : ''} disabled={busy} onClick={() => switchMode('permit')}>
+          방식 B · permit 서명 + 예치 (트랜잭션 1번)
+        </button>
+      </div>
 
       <label>
         판매자 주소
@@ -138,48 +189,97 @@ export function CreateDeal({ onCreated }: { onCreated: (id: bigint) => void }) {
 
       {problem && <p className="muted small">⚠️ {problem}</p>}
 
-      <ol className="steps">
-        <Step
-          n={1}
-          title="승인 (approve)"
-          desc={`에스크로가 내 mUSD를 ${formatMusd(amount)}만큼 가져가도 된다고 허락 · 현재 승인액 ${formatMusd(allowance)} mUSD`}
-          done={approved}
-          tx={approveTx.state}
-        >
-          <button disabled={!!problem || busy || approved} onClick={handleApprove}>
-            {approved ? '승인 완료' : '1단계 승인(approve)'}
-          </button>
-        </Step>
-        <Step
-          n={2}
-          title="예치 (createDeal)"
-          desc="에스크로 컨트랙트가 승인된 mUSD를 가져가 보관하고 거래를 기록"
-          done={createdId !== undefined}
-          tx={createTx.state}
-        >
-          <button className="primary" disabled={!!problem || busy || !approved} onClick={handleCreate}>
-            2단계 예치(createDeal)
-          </button>
-        </Step>
-      </ol>
+      {mode === 'approve' ? (
+        <ol className="steps">
+          <Step
+            n={1}
+            kind="write"
+            title="승인 (approve)"
+            desc={`에스크로가 내 mUSD를 ${formatMusd(amount)}만큼 가져가도 된다고 허락 · 현재 승인액 ${formatMusd(allowance)} mUSD`}
+            done={approved}
+            tx={approveTx.state}
+          >
+            <button disabled={!!problem || busy || approved} onClick={handleApprove}>
+              {approved ? '승인 완료' : '1단계 승인(approve)'}
+            </button>
+          </Step>
+          <Step
+            n={2}
+            kind="write"
+            title="예치 (createDeal)"
+            desc="에스크로 컨트랙트가 승인된 mUSD를 가져가 보관하고 거래를 기록"
+            done={createdId !== undefined}
+            tx={createTx.state}
+          >
+            <button className="primary" disabled={!!problem || busy || !approved} onClick={handleCreate}>
+              2단계 예치(createDeal)
+            </button>
+          </Step>
+        </ol>
+      ) : (
+        <ol className="steps">
+          <Step
+            n={1}
+            kind="sign"
+            title="permit 서명"
+            desc={`"에스크로가 내 mUSD를 ${formatMusd(amount)}만큼 가져가도 된다"는 메시지에 서명 · 네트워크로 아무것도 보내지 않아요 · permit nonce ${permit.nonce?.toString() ?? '-'}`}
+            done={signed}
+            tx={permit.state}
+            successText="서명 완료! 가스 0 · 블록에 기록되지 않음 · 아직 체인에서는 아무 일도 일어나지 않았어요."
+          >
+            <button disabled={!!problem || busy || signed} onClick={handlePermitSign}>
+              {signed ? '서명 완료' : '1단계 서명(permit)'}
+            </button>
+          </Step>
+          <Step
+            n={2}
+            kind="write"
+            title="예치 (createDealWithPermit)"
+            desc="서명을 실어 보내면 컨트랙트가 서명을 검증해 승인 처리 → 곧바로 mUSD를 가져가 거래를 기록"
+            done={createdId !== undefined}
+            tx={createTx.state}
+          >
+            <button className="primary" disabled={!!problem || busy || !signed} onClick={handleCreate}>
+              2단계 예치(createDealWithPermit)
+            </button>
+          </Step>
+          {sig && !signed && permit.state.phase === 'success' && (
+            <p className="muted small">⚠️ 서명한 뒤 금액이 바뀌었거나 서명 유효기한(20분)이 지나서, 다시 서명해야 해요.</p>
+          )}
+        </ol>
+      )}
 
       {createdId !== undefined && <p className="ok">🎉 거래 #{createdId.toString()} 이(가) 만들어졌어요. 아래 목록에서 확인하세요.</p>}
     </section>
   )
 }
 
-function Step(props: { n: number; title: string; desc: string; done: boolean; tx: TxState; children: ReactNode }) {
+function Step(props: {
+  n: number
+  kind: 'write' | 'sign'
+  title: string
+  desc: string
+  done: boolean
+  tx: TxState
+  successText?: string
+  children: ReactNode
+}) {
   const icon = props.done ? '✅' : props.tx.phase === 'error' ? '❌' : props.tx.phase === 'idle' ? '⬜' : '⏳'
   return (
     <li className={`step ${props.done ? 'done' : ''}`}>
       <div className="step-head">
         <span>
-          {icon} {props.n}단계 · {props.title} <span className="tag write">쓰기 · 트랜잭션</span>
+          {icon} {props.n}단계 · {props.title}{' '}
+          {props.kind === 'write' ? (
+            <span className="tag write">쓰기 · 트랜잭션</span>
+          ) : (
+            <span className="tag sign">서명 · 가스 없음</span>
+          )}
         </span>
         {props.children}
       </div>
       <div className="muted small">{props.desc}</div>
-      <TxStatus state={props.tx} />
+      <TxStatus state={props.tx} successText={props.successText} />
     </li>
   )
 }

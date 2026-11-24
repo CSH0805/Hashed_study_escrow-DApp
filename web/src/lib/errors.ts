@@ -22,6 +22,7 @@ const CONTRACT_ERRORS: Record<string, string> = {
   NotSeller: '이 거래의 판매자만 할 수 있어요.',
   DealNotFunded: '이미 끝난 거래라 다시 처리할 수 없어요.',
   DeadlineNotPassed: '아직 마감 전이에요. 마감이 지난 뒤에 다시 시도해 주세요.',
+  PermitFailed: 'permit 서명이 유효하지 않아요. 서명이 만료됐거나, 금액이 바뀌었거나, 이미 사용된 서명이에요. 다시 서명해 주세요.',
   ReentrancyGuardReentrantCall: '재진입 호출이 차단됐어요.',
   // OpenZeppelin ERC20 (MockUSD)
   ERC20InsufficientAllowance: '승인(approve)한 금액이 부족해요. 1단계 승인을 먼저 해 주세요.',

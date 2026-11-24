@@ -12,12 +12,16 @@ const MESSAGES: Record<TxState['phase'], string> = {
 }
 
 /** 트랜잭션 진행 상황을 한국어로 보여주는 작은 안내 상자 */
-export function TxStatus({ state }: { state: TxState }) {
+export function TxStatus({ state, successText }: { state: TxState; successText?: string }) {
   if (state.phase === 'idle') return null
   return (
     <div className={`tx tx-${state.phase}`} role="status">
       <div>
-        {state.phase === 'error' ? `❌ ${state.error ?? MESSAGES.error}` : MESSAGES[state.phase]}
+        {state.phase === 'error'
+          ? `❌ ${state.error ?? MESSAGES.error}`
+          : state.phase === 'success' && successText
+            ? successText
+            : MESSAGES[state.phase]}
       </div>
       {/* 성공했을 때만: 영수증에 적힌 실제 비용 */}
       {state.phase === 'success' && state.gasUsed !== undefined && state.fee !== undefined && (
