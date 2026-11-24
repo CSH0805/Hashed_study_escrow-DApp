@@ -1,6 +1,7 @@
 // Anvil nonce 맞추기 — "블록에 담기기를 기다리는 중…"에서 멈췄을 때
 //
-// 실행: npm run fix-nonce   (web/ 폴더에서, Anvil이 켜져 있어야 함)
+// 실행: npm run fix-nonce           (web/ 폴더에서, Anvil이 켜져 있어야 함) — 한 번만 검사
+//       npm run fix-nonce -- --watch  — 켜 두면 2초마다 검사해서 걸린 트랜잭션을 자동으로 풀어 줌
 //
 // 왜 필요한가?
 //   Anvil을 껐다 켜면 체인이 처음부터 시작해서 계정 nonce가 0으로 돌아간다.
@@ -16,7 +17,7 @@
 
 import { keccak256, serializeTransaction } from 'viem'
 
-const RPC = 'http://127.0.0.1:8545'
+const RPC = process.env.RPC_URL ?? 'http://127.0.0.1:8545'
 
 async function rpc(method, params = []) {
   const res = await fetch(RPC, {
@@ -24,6 +25,7 @@ async function rpc(method, params = []) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
   }).catch(() => {
+    if (process.argv.includes('--watch')) throw new Error('Anvil(127.0.0.1:8545)에 연결할 수 없어요. anvil이 켜져 있는지 확인해 주세요.')
     console.error('❌ Anvil(127.0.0.1:8545)에 연결할 수 없어요. 터미널에서 anvil이 켜져 있는지 확인해 주세요.')
     process.exit(1)
   })
@@ -32,48 +34,63 @@ async function rpc(method, params = []) {
   return json.result
 }
 
-const pool = await rpc('txpool_content')
-const queued = Object.entries(pool.queued ?? {})
-if (queued.length === 0) {
-  console.log('✅ 대기열에 걸린 트랜잭션이 없어요. nonce는 정상이에요.')
-  process.exit(0)
-}
+/** 대기열을 한 번 검사해서 걸린 트랜잭션을 푼다. 고친 게 있으면 true */
+async function fixOnce() {
+  const pool = await rpc('txpool_content')
+  const queued = Object.entries(pool.queued ?? {})
+  if (queued.length === 0) return false
 
-for (const [address, txs] of queued) {
-  const list = Object.values(txs).sort((a, b) => Number(BigInt(a.nonce) - BigInt(b.nonce)))
-  const target = BigInt(list[0].nonce)
-  const current = BigInt(await rpc('eth_getTransactionCount', [address, 'latest']))
-  console.log(`🔧 ${address}: 체인 nonce ${current} → ${target} (대기 중인 nonce: ${list.map((t) => BigInt(t.nonce)).join(', ')})`)
-  await rpc('anvil_setNonce', [address, `0x${target.toString(16)}`])
+  for (const [address, txs] of queued) {
+    const list = Object.values(txs).sort((a, b) => Number(BigInt(a.nonce) - BigInt(b.nonce)))
+    const target = BigInt(list[0].nonce)
+    const current = BigInt(await rpc('eth_getTransactionCount', [address, 'latest']))
+    console.log(`🔧 ${address}: 체인 nonce ${current} → ${target} (대기 중인 nonce: ${list.map((t) => BigInt(t.nonce)).join(', ')})`)
+    await rpc('anvil_setNonce', [address, `0x${target.toString(16)}`])
 
-  for (const tx of list) {
-    // 노드가 보관 중인 필드 + 서명(r, s, yParity)으로 원래의 서명된 트랜잭션(raw)을 다시 만든다
-    const raw = serializeTransaction(
-      {
-        type: 'eip1559',
-        chainId: Number(tx.chainId),
-        nonce: Number(tx.nonce),
-        gas: BigInt(tx.gas),
-        maxFeePerGas: BigInt(tx.maxFeePerGas),
-        maxPriorityFeePerGas: BigInt(tx.maxPriorityFeePerGas),
-        to: tx.to ?? undefined,
-        value: BigInt(tx.value),
-        data: tx.input,
-        accessList: tx.accessList ?? [],
-      },
-      { r: tx.r, s: tx.s, yParity: Number(tx.yParity ?? tx.v) },
-    )
-    if (keccak256(raw) !== tx.hash) {
-      console.log(`   ⚠️ nonce ${BigInt(tx.nonce)}: 트랜잭션을 복원하지 못해 건너뜀`)
-      continue
+    for (const tx of list) {
+      // 노드가 보관 중인 필드 + 서명(r, s, yParity)으로 원래의 서명된 트랜잭션(raw)을 다시 만든다
+      const raw = serializeTransaction(
+        {
+          type: 'eip1559',
+          chainId: Number(tx.chainId),
+          nonce: Number(tx.nonce),
+          gas: BigInt(tx.gas),
+          maxFeePerGas: BigInt(tx.maxFeePerGas),
+          maxPriorityFeePerGas: BigInt(tx.maxPriorityFeePerGas),
+          to: tx.to ?? undefined,
+          value: BigInt(tx.value),
+          data: tx.input,
+          accessList: tx.accessList ?? [],
+        },
+        { r: tx.r, s: tx.s, yParity: Number(tx.yParity ?? tx.v) },
+      )
+      if (keccak256(raw) !== tx.hash) {
+        console.log(`   ⚠️ nonce ${BigInt(tx.nonce)}: 트랜잭션을 복원하지 못해 건너뜀`)
+        continue
+      }
+      await rpc('anvil_dropTransaction', [tx.hash])
+      await rpc('eth_sendRawTransaction', [raw])
+      console.log(`   ↻ nonce ${BigInt(tx.nonce)} 재전송 (${tx.hash.slice(0, 10)}…)`)
     }
-    await rpc('anvil_dropTransaction', [tx.hash])
-    await rpc('eth_sendRawTransaction', [raw])
-    console.log(`   ↻ nonce ${BigInt(tx.nonce)} 재전송 (${tx.hash.slice(0, 10)}…)`)
   }
+
+  await rpc('evm_mine') // 대기열이 풀린 트랜잭션들을 블록에 담는다
+  const left = await rpc('txpool_content')
+  const remaining = Object.values(left.queued ?? {}).reduce((n, txs) => n + Object.keys(txs).length, 0)
+  console.log(remaining === 0 ? '✅ 대기 중이던 트랜잭션이 모두 처리됐어요.' : `⚠️ 아직 ${remaining}개가 대기 중이에요.`)
+  return true
 }
 
-await rpc('evm_mine') // 대기열이 풀린 트랜잭션들을 블록에 담는다
-const left = await rpc('txpool_content')
-const remaining = Object.values(left.queued ?? {}).reduce((n, txs) => n + Object.keys(txs).length, 0)
-console.log(remaining === 0 ? '✅ 대기 중이던 트랜잭션이 모두 처리됐어요. 화면을 새로고침하세요.' : `⚠️ 아직 ${remaining}개가 대기 중이에요. 한 번 더 실행해 보세요.`)
+if (process.argv.includes('--watch')) {
+  console.log('👀 2초마다 nonce 꼬임을 검사해요. (끄려면 Ctrl+C)')
+  for (;;) {
+    try {
+      await fixOnce()
+    } catch (err) {
+      console.error('⚠️', err.message)
+    }
+    await new Promise((r) => setTimeout(r, 2000))
+  }
+} else if (!(await fixOnce())) {
+  console.log('✅ 대기열에 걸린 트랜잭션이 없어요. nonce는 정상이에요.')
+}

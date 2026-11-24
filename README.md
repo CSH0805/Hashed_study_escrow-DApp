@@ -113,7 +113,7 @@ cd contracts
 forge test
 ```
 
-### 2. 로컬 체인 + 배포 + 화면 (터미널 2개)
+### 2. 로컬 체인 + 배포 + 화면 (터미널 3개)
 
 ```bash
 # 터미널 ①  — 시연 내내 켜 두기
@@ -129,6 +129,12 @@ forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast \
 cd ../web
 npm run sync   # 컨트랙트를 고쳤거나 주소가 바뀌었을 때만 필요
 npm run dev    # → http://localhost:5173
+```
+
+```bash
+# 터미널 ③ (권장) — Anvil 재시작 후 MetaMask nonce가 어긋나 tx가 멈추면 자동으로 풀어 줌
+cd web
+npm run nonce-watch
 ```
 
 Anvil을 새로 켜고 **한 번만** 배포하면 주소는 항상 같습니다 (배포 주소 = 배포자 주소 + nonce로 계산). 같은 Anvil에 여러 번 배포하면 배포자 nonce가 올라가 주소가 바뀌므로, 그때는 `cd web && npm run sync`로 화면 주소를 맞춰 주세요.
