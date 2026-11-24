@@ -59,7 +59,7 @@ export function toKoreanError(err: unknown, context: 'tx' | 'connect' | 'switch'
       return '가스비로 낼 ETH가 없어요. MetaMask에서 Anvil 테스트 계정(구매자/판매자)을 선택했는지 확인해 주세요.'
     }
     if (msg.includes('nonce')) {
-      return 'nonce가 맞지 않아요. Anvil을 재시작했다면 MetaMask → 설정 → 고급 → "활동 및 논스 데이터 지우기"를 눌러 주세요.'
+      return 'nonce가 맞지 않아요. Anvil을 재시작했다면 web/ 폴더에서 `npm run fix-nonce`를 실행하거나, MetaMask 설정에서 "논스"를 검색해 "활동 및 논스 데이터 지우기"를 눌러 주세요.'
     }
     if (msg.includes('fetch') || msg.includes('http request failed') || msg.includes('econnrefused')) {
       return 'Anvil 노드(127.0.0.1:8545)에 연결할 수 없어요. 터미널에서 anvil이 켜져 있는지 확인해 주세요.'

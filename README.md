@@ -131,7 +131,7 @@ npm run sync   # 컨트랙트를 고쳤거나 주소가 바뀌었을 때만 필�
 npm run dev    # → http://localhost:5173
 ```
 
-Anvil을 새로 켜고 같은 순서로 배포하면 주소는 항상 같습니다 (배포 주소 = 배포자 주소 + nonce로 계산).
+Anvil을 새로 켜고 **한 번만** 배포하면 주소는 항상 같습니다 (배포 주소 = 배포자 주소 + nonce로 계산). 같은 Anvil에 여러 번 배포하면 배포자 nonce가 올라가 주소가 바뀌므로, 그때는 `cd web && npm run sync`로 화면 주소를 맞춰 주세요.
 
 | 컨트랙트 | 주소 (Anvil) |
 |---|---|
@@ -194,7 +194,7 @@ cast nonce $B && cast block-number                               # 둘 다 1씩 
 | 증상 | 원인 / 해결 |
 |---|---|
 | `forge: command not found` | PATH 미등록. `~/.zshrc`에 `export PATH="$PATH:$HOME/.foundry/bin"` 추가 후 터미널 재시작 |
-| `nonce too high`, 트랜잭션이 계속 대기 | Anvil을 재시작하면 체인이 초기화되는데 MetaMask는 이전 nonce를 기억함 → MetaMask 설정 → 고급 → **활동 및 논스 데이터 지우기** (계정마다). 배포도 다시 실행 |
+| `nonce too high`, "블록에 담기기를 기다리는 중"에서 멈춤 | Anvil을 재시작하면 체인 nonce는 0으로 돌아가는데 MetaMask는 예전 nonce로 보냄 → **`cd web && npm run fix-nonce`** (Anvil nonce를 MetaMask에 맞추고 대기 tx 재전송). 정석은 MetaMask 설정에서 "논스" 검색 → **활동 및 논스 데이터 지우기**(최신 버전은 "고급" 메뉴가 없음). 배포도 다시 실행 |
 | "The requested method and/or account has not been authorized" | 사이트에 계정·네트워크 권한이 없음 → `localhost:5173` 연결 설정에서 계정 체크, 네트워크를 Anvil로 |
 | 화면 주소와 MetaMask 위쪽 계정이 다름 | 최신 MetaMask는 "지갑에서 보고 있는 계정"과 "사이트가 쓰는 계정"을 따로 관리. 화면 주소가 기준. 아래쪽에 "연결되지 않음"이 보이면 "연결" 클릭 |
 | 가스비(ETH) 부족 | MetaMask가 만든 기본 계정(Account 1)은 Anvil에 ETH가 없음 → 가져온 Anvil 계정 사용 |

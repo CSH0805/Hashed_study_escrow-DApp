@@ -89,7 +89,7 @@ export function useTx() {
         (err: unknown) => {
           if (err instanceof Error && err.name === 'WaitForTransactionReceiptTimeoutError') {
             throw new Error(
-              '15초가 지나도 블록에 담기지 않았어요. Anvil을 재시작했다면 MetaMask가 예전 nonce로 보냈을 가능성이 커요. MetaMask → 설정 → 고급 → "활동 및 논스 데이터 지우기" 후 새로고침해 주세요.',
+              '15초가 지나도 블록에 담기지 않았어요. Anvil을 재시작해서 MetaMask가 예전 nonce로 보낸 것 같아요. 터미널의 web/ 폴더에서 `npm run fix-nonce`를 실행하고 새로고침해 주세요. (또는 MetaMask 설정에서 "논스"를 검색해 "활동 및 논스 데이터 지우기")',
             )
           }
           throw err
