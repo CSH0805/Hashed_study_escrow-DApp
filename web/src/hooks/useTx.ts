@@ -83,7 +83,18 @@ export function useTx() {
 
       // ④ 트랜잭션 해시는 "접수번호"일 뿐. 블록에 담겨야 결과가 확정된다.
       setState({ phase: 'pending', hash })
-      const receipt = await waitForTransactionReceipt(config, { hash, chainId: anvil.id })
+      // 로컬 Anvil은 보통 1초 안에 블록에 담는다. 15초가 지나도 안 되면 거의 항상 nonce 꼬임
+      // (Anvil을 재시작했는데 MetaMask가 예전 nonce로 보내서, Anvil이 앞 번호를 기다리며 대기열에 넣어 둔 상태)이다.
+      const receipt = await waitForTransactionReceipt(config, { hash, chainId: anvil.id, timeout: 15_000 }).catch(
+        (err: unknown) => {
+          if (err instanceof Error && err.name === 'WaitForTransactionReceiptTimeoutError') {
+            throw new Error(
+              '15초가 지나도 블록에 담기지 않았어요. Anvil을 재시작했다면 MetaMask가 예전 nonce로 보냈을 가능성이 커요. MetaMask → 설정 → 고급 → "활동 및 논스 데이터 지우기" 후 새로고침해 주세요.',
+            )
+          }
+          throw err
+        },
+      )
       if (receipt.status === 'reverted') {
         setState({ phase: 'error', hash, error: '블록에는 담겼지만 실행이 실패(revert)했어요.' })
         return

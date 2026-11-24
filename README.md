@@ -50,7 +50,7 @@
 ## 컨트랙트 요약
 
 ### Escrow 함수
-
+[text](README.md)
 | 함수 | 종류 | 누가 | 하는 일 |
 |---|---|---|---|
 | `createDeal(seller, amount, deadline, description)` | 쓰기 | 구매자 | 미리 `approve`받은 mUSD를 `transferFrom`으로 예치하고 거래 생성 |
