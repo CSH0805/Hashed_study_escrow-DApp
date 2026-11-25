@@ -2,9 +2,20 @@
 
 구매자가 맡긴 스테이블코인을 **중개 회사 대신 스마트 컨트랙트가 보관**하다가, 거래가 끝나면 규칙에 따라 판매자나 구매자에게 보내 주는 안전결제 서비스입니다.
 
-블록체인 기초(비트코인·이더리움)를 공부한 뒤, **디앱이 어떻게 구성되고 동작하는지 직접 만들면서 익히기 위한 학습용 프로젝트**입니다. 내 컴퓨터의 로컬 블록체인(Anvil)에서만 동작합니다.
+블록체인 기초(비트코인·이더리움)를 공부한 뒤, **디앱이 어떻게 구성되고 동작하는지 직접 만들면서 익히기 위한 학습용 프로젝트**입니다. 내 컴퓨터의 로컬 블록체인(Anvil)에서 개발하고, **이더리움 공개 테스트넷 Sepolia에 배포**했습니다.
 
-> ⚠️ 학습용 코드입니다. 테스트넷·메인넷에 배포하지 않으며, 감사(audit)를 받지 않았으므로 실제 자산에 사용하지 마세요.
+> ⚠️ 학습용 코드입니다. 메인넷에는 배포하지 않으며, 감사(audit)를 받지 않았으므로 실제 자산에 사용하지 마세요. Sepolia의 ETH와 mUSD는 돈 가치가 없는 테스트용입니다.
+
+## Sepolia 배포 주소
+
+누구나 Etherscan에서 코드와 거래 내역을 확인할 수 있습니다.
+
+| 컨트랙트 | 주소 |
+|---|---|
+| MockUSD (mUSD) | [`0xe7E19390D9F56010B20a8A2cDb0254FdeB86e144`](https://sepolia.etherscan.io/address/0xe7E19390D9F56010B20a8A2cDb0254FdeB86e144) |
+| Escrow | [`0xe535341775C425Bac0D400B6b2de17d64D39f65d`](https://sepolia.etherscan.io/address/0xe535341775C425Bac0D400B6b2de17d64D39f65d) |
+
+네트워크: Sepolia (chainId `11155111`) · 배포 블록 `12206726`
 
 ## 문서
 
@@ -12,7 +23,8 @@
 |---|---|
 | **README.md** (지금 문서) | 이 디앱이 무엇이고 무엇을 할 수 있는지 |
 | [docs/TECHNICAL.md](docs/TECHNICAL.md) | 구조, 컨트랙트 로직, 웹 화면 동작, 테스트, 강의와의 연결 |
-| [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | 설치, 실행, MetaMask 설정, 시연 순서, 자주 막히는 문제 |
+| [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | 설치, 실행, MetaMask 설정, 시연 순서, 자주 막히는 문제 (로컬 Anvil) |
+| [docs/SEPOLIA.md](docs/SEPOLIA.md) | Sepolia 테스트넷 배포, 개발용 지갑과 테스트 ETH, Sepolia에서 실행하기 |
 
 ---
 
@@ -69,6 +81,6 @@
 - **스마트 컨트랙트**: Solidity, Foundry, OpenZeppelin v5 — 테스트용 스테이블코인(MockUSD)과 에스크로 본체(Escrow)
 - **웹 화면**: Vite + React + TypeScript, wagmi v2, viem
 - **지갑**: MetaMask
-- **블록체인 네트워크**: Anvil (내 컴퓨터의 로컬 이더리움 노드)
+- **블록체인 네트워크**: Anvil (내 컴퓨터의 로컬 이더리움 노드, 개발용) / Sepolia (이더리움 공개 테스트넷, 배포용)
 
-자세한 구조는 [docs/TECHNICAL.md](docs/TECHNICAL.md), 직접 실행하는 방법은 [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)를 보세요.
+자세한 구조는 [docs/TECHNICAL.md](docs/TECHNICAL.md), 직접 실행하는 방법은 [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)(Anvil)와 [docs/SEPOLIA.md](docs/SEPOLIA.md)(Sepolia)를 보세요.
