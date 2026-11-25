@@ -5,6 +5,7 @@ type Deployment = { MockUSD: `0x${string}`; Escrow: `0x${string}`; startBlock: b
 
 /** chainId → 배포 주소. 어느 체인을 쓸지는 src/network.ts 가 정한다. */
 export const DEPLOYMENTS: Partial<Record<number, Deployment>> = {
+  11155111: { MockUSD: '0xe7E19390D9F56010B20a8A2cDb0254FdeB86e144', Escrow: '0xe535341775C425Bac0D400B6b2de17d64D39f65d', startBlock: 12206725n },
   31337: { MockUSD: '0x5FbDB2315678afecb367f032d93F642f64180aa3', Escrow: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512', startBlock: 0n },
 }
 

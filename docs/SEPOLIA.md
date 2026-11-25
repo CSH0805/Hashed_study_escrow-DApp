@@ -48,8 +48,10 @@ cast balance <주소> --rpc-url sepolia --ether
 
 ```bash
 cd contracts
-forge script script/Deploy.s.sol --rpc-url sepolia --account dev --broadcast
+forge script script/Deploy.s.sol --rpc-url sepolia --account dev --broadcast --gas-estimate-multiplier 115
 ```
+
+- `--gas-estimate-multiplier 115`: Sepolia에서는 컨트랙트 배포 가스가 Anvil보다 훨씬 커서(Escrow 약 1,390만) forge 기본 여유분(130%)을 붙이면 트랜잭션 하나의 가스 상한(약 1,677만, EIP-7825)을 넘습니다. 여유분을 115%로 낮춥니다.
 
 - `--rpc-url sepolia`: `foundry.toml`의 `[rpc_endpoints]`에 적어 둔 무료 공개 RPC
 - `--account dev`: 1단계 키스토어 (비밀번호를 물어봄)
