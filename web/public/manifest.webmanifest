@@ -1,0 +1,13 @@
+{
+  "name": "마루 당근 — 안전결제",
+  "short_name": "마루 당근",
+  "description": "스마트 컨트랙트가 돈을 맡아 주는 동네 중고거래 안전결제 (학습용 데모)",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ff6f0f",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

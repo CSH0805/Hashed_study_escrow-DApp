@@ -49,18 +49,30 @@ escrow-DApp/
 │   │   └── Escrow.sol            에스크로 본체
 │   ├── test/                     Foundry 테스트 41개
 │   ├── script/Deploy.s.sol       배포 스크립트
-│   ├── deployments/31337.json    배포 주소 (웹이 읽음)
+│   ├── deployments/<chainId>.json  배포 주소 (31337=Anvil, 11155111=Sepolia, 웹이 읽음)
 │   └── lib/                      OpenZeppelin, forge-std (git submodule)
 └── web/                          Vite + React
     ├── scripts/
     │   ├── sync-contracts.mjs    ABI·주소 → src/contracts/generated.ts
     │   └── fix-nonce.mjs         Anvil 재시작 후 nonce 꼬임 해결
-    └── src/
-        ├── wagmi.ts              체인·지갑·RPC 설정
-        ├── contracts/generated.ts  (자동 생성) ABI와 주소
-        ├── hooks/                useTx(쓰기 공통), usePermit(서명), useChainNow(체인 시각)
-        ├── components/           Header, Faucet, CreateDeal, DealList, DealDetail, DealTimeline, TxStatus
-        └── lib/                  errors(한국어 오류), format, gas
+    └── src/                      기능(화면)별로 폴더를 나누고, 한 파일에는 한 가지 일만 둠
+        ├── main.tsx              진입점 (wagmi·react-query Provider)
+        ├── App.tsx               앱 뼈대: 앱 바 + 지금 화면 + 탭 바 (화면 고르기만 함)
+        ├── app/router.ts         #/ · #/create · #/wallet · #/deal/3 화면 전환
+        ├── config/               network.ts(체인·주소 선택), wagmi.ts(지갑·RPC 설정)
+        ├── contracts/generated.ts  (자동 생성) ABI와 체인별 주소
+        ├── layout/               AppBar, TabBar, ScreenHeader(← 뒤로), NotDeployed
+        ├── features/
+        │   ├── deals/            내 거래 탭: DealsScreen, DealList, DealListItem, useMyDeals
+        │   ├── deal-detail/      거래 상세: DealDetailScreen, DealSummary, DealActions, DealTimeline, useDeal, useDealEvents
+        │   ├── create-deal/      안전결제 탭: CreateDealScreen, DealFormFields, PaymentModeTabs, ApproveFlow, PermitFlow,
+        │   │                     useDealForm(입력), validateDealForm(검사), useAllowance, useCreateDeal(approve/permit/예치)
+        │   └── wallet/           내 지갑 탭: WalletScreen, WalletSummary, FaucetCard, ConnectButton, NetworkGuard, TestnetNotice, useMusdBalance
+        ├── shared/
+        │   ├── hooks/            useTx(쓰기 공통), usePermitSign(서명), useChainNow(체인 시각), useRefreshOnNewBlock
+        │   ├── lib/              errors(한국어 오류), format, gas, amount, time, dealStatus
+        │   └── ui/               TxStatus, Step, Tag, StatusBadge, EmptyState
+        └── styles/               tokens · base · layout · form · feedback · deals · detail (index.css가 모아 불러옴)
 ```
 
 ---
@@ -182,13 +194,13 @@ permit 서명이 안전한 이유:
 
 [`web/scripts/sync-contracts.mjs`](../web/scripts/sync-contracts.mjs)(`npm run sync`)가 Foundry 컴파일 결과의 ABI와 `deployments/<chainId>.json`(31337=Anvil, 11155111=Sepolia)의 주소·배포 블록을 [`web/src/contracts/generated.ts`](../web/src/contracts/generated.ts)로 복사합니다. ABI를 `as const`로 저장해서 wagmi/viem이 함수 이름·인자 타입을 추론하고, 오타를 코드 작성 단계에서 잡아 줍니다.
 
-[`wagmi.ts`](../web/src/wagmi.ts) 설정:
-- 체인: 하나만. [`network.ts`](../web/src/network.ts)가 Vite mode로 고름 — `npm run dev` → `anvil`(31337), `npm run dev:sepolia` → `sepolia`(11155111)
+[`wagmi.ts`](../web/src/config/wagmi.ts) 설정:
+- 체인: 하나만. [`network.ts`](../web/src/config/network.ts)가 Vite mode로 고름 — `npm run dev` → `anvil`(31337), `npm run dev:sepolia` → `sepolia`(11155111)
 - 지갑: `injected({ target: 'metaMask' })`만, `multiInjectedProviderDiscovery: false`
 - 읽기 통로: Anvil `http://127.0.0.1:8545`(1초 주기) / Sepolia 공개 RPC(4초 주기, `VITE_SEPOLIA_RPC_URL`로 교체 가능)
 - 화면 코드는 `anvil`·`31337`을 직접 쓰지 않고 `network.ts`의 `TARGET_CHAIN`, `IS_LOCAL`, 주소 상수만 씀. Sepolia에서는 tx 해시가 Etherscan 링크가 되고, Anvil 전용 nonce 안내는 나오지 않음. 자세한 배포 방법은 [SEPOLIA.md](SEPOLIA.md)
 
-### 쓰기 흐름 — [`useTx`](../web/src/hooks/useTx.ts)
+### 쓰기 흐름 — [`useTx`](../web/src/shared/hooks/useTx.ts)
 
 모든 쓰기 버튼이 같은 훅을 씁니다.
 
@@ -203,13 +215,13 @@ permit 서명이 안전한 이유:
 
 - 시뮬레이션에 `account`를 꼭 넘겨야 `msg.sender`가 "나"로 계산됩니다.
 - ERC-20 오류(잔고·승인 부족)는 MockUSD에서 나지만 Escrow를 호출하다가 터지므로, 오류 해석용 ABI에 토큰 오류도 합쳐 둡니다.
-- [`errors.ts`](../web/src/lib/errors.ts)가 custom error 이름, 서명 거절(4001), 권한 없음(4100), 네트워크 불일치, 가스 부족, nonce 문제를 한국어로 바꿉니다.
+- [`errors.ts`](../web/src/shared/lib/errors.ts)가 custom error 이름, 서명 거절(4001), 권한 없음(4100), 네트워크 불일치, 가스 부족, nonce 문제를 한국어로 바꿉니다.
 
-### permit 서명 — [`usePermit`](../web/src/hooks/usePermit.ts)
+### permit 서명 — [`usePermitSign`](../web/src/shared/hooks/usePermitSign.ts)
 
 `eip712Domain()`과 `nonces(owner)`를 컨트랙트에서 읽고, `signTypedData`로 `Permit(owner, spender, value, nonce, deadline)`에 서명받은 뒤 `parseSignature`로 v·r·s를 나눕니다. 서명 후 금액이 바뀌거나, nonce가 달라지거나, 유효기한이 지나면 화면이 "다시 서명해야 해요"를 표시합니다.
 
-### 체인 시각 — [`useChainNow`](../web/src/hooks/useChainNow.ts)
+### 체인 시각 — [`useChainNow`](../web/src/shared/hooks/useChainNow.ts)
 
 컨트랙트는 마감을 `block.timestamp`로 판정합니다. Anvil에서 `evm_increaseTime`으로 시간을 앞당기면 체인이 실제 시계보다 앞서므로, 화면은 **`max(마지막 블록 시각, 내 시계)`** 를 기준으로 마감 여부와 기본 마감일(체인 시각 + 1일)을 계산합니다.
 
@@ -217,11 +229,11 @@ permit 서명이 안전한 이유:
 
 - 거래 목록: `getDealIdsByBuyer/Seller`로 번호를 읽고, `useReadContracts`(multicall)로 `getDeal`을 한꺼번에 읽습니다.
 - 새 블록이 생길 때마다(`useBlockNumber({ watch: true })`) 잔고·목록·거래 내역을 다시 읽습니다. 다른 계정에서 보낸 트랜잭션 결과도 자동으로 반영됩니다.
-- MetaMask에서 계정을 바꾸면 선택한 거래가 닫힙니다(역할이 달라지므로).
+- 화면은 주소의 `#` 뒤로 바뀝니다(`#/`, `#/create`, `#/wallet`, `#/deal/3`). 새로고침·뒤로 가기가 그대로 되고, 상세 화면에서 MetaMask 계정을 바꾸면 역할과 버튼이 새 계정 기준으로 다시 계산됩니다.
 
-### 거래 내역 — [`DealTimeline`](../web/src/components/DealTimeline.tsx)
+### 거래 내역 — [`DealTimeline`](../web/src/features/deal-detail/DealTimeline.tsx)
 
-`getContractEvents`로 이 거래(`args: { id }`)의 `DealCreated`/`DealReleased`/`DealRefunded` 로그를 블록 0부터 찾고, 각 로그의 블록(시각)과 영수증(서명자, 가스, 가스 가격)을 함께 읽어 시간순으로 표시합니다. 실제 서비스는 블록 0부터 훑으면 느리므로 배포 블록부터 찾거나 The Graph 같은 인덱서를 씁니다.
+`getContractEvents`로 이 거래(`args: { id }`)의 `DealCreated`/`DealReleased`/`DealRefunded` 로그를 컨트랙트 배포 블록(`startBlock`)부터 찾고, 각 로그의 블록(시각)과 영수증(서명자, 가스, 가스 가격)을 함께 읽어 시간순으로 표시합니다. 실제 서비스는 The Graph 같은 인덱서를 씁니다.
 
 ### 역할별 버튼
 

@@ -2,10 +2,18 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: 아이폰 노치·홈 바 영역까지 화면을 쓰고, CSS의 safe-area 여백으로 내용을 피한다 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>마루 당근</title>
+    <meta name="description" content="스마트 컨트랙트가 돈을 맡아 주는 동네 중고거래 안전결제 (학습용 데모)" />
     <meta name="theme-color" content="#ff6f0f" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <!-- 홈 화면에 추가하면 주소창 없이 앱처럼 열리게 하는 설정 (안드로이드: manifest, 아이폰: apple-* 태그) -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="마루 당근" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   </head>
   <body>
     <div id="root"></div>

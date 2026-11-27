@@ -1,0 +1,23 @@
+/* 태그 · 트랜잭션 진행 상자 · 경고 · 지갑 카드 */
+/* 읽기/쓰기/서명 표시 태그 (학습용) */
+.tag { font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.tag.read { color: var(--read); background: color-mix(in srgb, var(--read) 12%, transparent); }
+.tag.write { color: var(--write); background: color-mix(in srgb, var(--write) 12%, transparent); }
+.tag.sign { color: var(--sign); background: color-mix(in srgb, var(--sign) 12%, transparent); }
+
+/* ── 트랜잭션 진행 상자 ── */
+.tx { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface); font-size: 14px; display: grid; gap: 2px; }
+.tx-success { color: var(--ok); background: var(--ok-soft); }
+.tx-error { color: var(--error); background: var(--error-soft); }
+
+.warn { background: var(--warn-bg); padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+
+/* 지갑 충전 배너 */
+.banner { display: flex; gap: 14px; align-items: center; background: var(--brand-soft); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.banner-icon { font-size: 30px; flex: none; }
+.banner-body { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.banner-body p { margin: 0; }
+
+/* 내 지갑 잔고 카드 */
+.wallet-card { display: grid; gap: 4px; padding: 18px; border-radius: 14px; background: var(--surface); }
+.wallet-balance { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }

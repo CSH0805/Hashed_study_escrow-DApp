@@ -1,0 +1,23 @@
+/* 전체 기본값: 상자 크기, 링크, 코드, 자주 쓰는 글자 도우미 */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); }
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+
+
+/* 앱처럼: 누를 때 회색 번쩍임 없애고, 화면 끝에서 당겨도 바깥이 튀지 않게 */
+html { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+button, .tabbar { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.break { word-break: break-all; }
+.ok { color: var(--ok); }
+.error { color: var(--error); }
+.lead { margin: -6px 0 14px; }
+
+h1 { font-size: 20px; margin: 0; font-weight: 800; letter-spacing: -0.3px; }
+h2 { font-size: 18px; margin: 0 0 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; letter-spacing: -0.2px; }
+h3 { font-size: 16px; font-weight: 700; }

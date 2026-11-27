@@ -1,0 +1,50 @@
+/* 색·글꼴 변수. 다크 모드는 시스템 설정을 따른다 */
+:root {
+  --brand: #ff6f0f;
+  --brand-soft: #fff1e7;
+  --brand-text: #ffffff;
+  --bg: #ffffff;
+  --page: #f2f3f6;
+  --surface: #f7f8fa;
+  --text: #212124;
+  --sub: #4d5159;
+  --muted: #868b94;
+  --line: #eaebee;
+  --divider: #f2f3f6;
+  --ok: #1aa174;
+  --ok-soft: #e6f7f1;
+  --error: #e53935;
+  --error-soft: #fdecec;
+  --warn-bg: #fff4e5;
+  --read: #2a7de1;
+  --write: #ff6f0f;
+  --sign: #1aa174;
+  --shadow: 0 1px 2px rgb(0 0 0 / 6%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
+  color: var(--text);
+  background: var(--page);
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand: #ff7e36;
+    --brand-soft: #3a2416;
+    --bg: #17171a;
+    --page: #0d0d0f;
+    --surface: #212124;
+    --text: #eaebee;
+    --sub: #c4c7cc;
+    --muted: #8b8f96;
+    --line: #2b2c30;
+    --divider: #0d0d0f;
+    --ok: #3ccf98;
+    --ok-soft: #10302a;
+    --error: #ff6b6b;
+    --error-soft: #3a1717;
+    --warn-bg: #33260f;
+    --read: #6aa8ff;
+    --write: #ff7e36;
+    --sign: #3ccf98;
+  }
+}
+

@@ -1,0 +1,49 @@
+/* 버튼 · 입력칸 · 세그먼트 탭 · 진행 단계 */
+/* ── 버튼 ── */
+button {
+  font: inherit; font-size: 15px; font-weight: 600; padding: 10px 16px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--text);
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+button:hover:not(:disabled) { background: var(--surface); }
+button.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-text); }
+button.primary:hover:not(:disabled) { background: var(--brand); filter: brightness(0.95); }
+button.ghost { border: 0; background: transparent; color: var(--muted); padding: 6px 10px; font-size: 13px; }
+button.block { width: 100%; padding: 14px; font-size: 16px; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button:active:not(:disabled) { transform: scale(0.98); } /* 누르는 느낌 */
+
+/* ── 입력 (글쓰기 화면처럼: 라벨 위, 큰 입력칸) ── */
+label { display: grid; gap: 6px; font-size: 15px; font-weight: 600; margin-bottom: 16px; flex: 1; min-width: 0; }
+.hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+input {
+  font: inherit; font-size: 16px; font-weight: 400; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg); color: var(--text); width: 100%;
+}
+input:focus { outline: none; border-color: var(--text); }
+input:disabled { background: var(--surface); }
+.price-input { position: relative; }
+.price-input input { padding-right: 64px; font-weight: 700; }
+.price-input .unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 600; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.row > label { min-width: 180px; }
+
+/* ── 세그먼트 탭 (구매내역/판매내역, 방식 A/B) ── */
+.tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.tabs button {
+  flex: 1; border: 0; border-radius: 0; background: transparent; color: var(--muted);
+  padding: 12px 8px; font-size: 15px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tabs button:hover:not(:disabled) { background: transparent; color: var(--text); }
+.tabs .active { color: var(--text); border-bottom-color: var(--text); font-weight: 700; }
+.mode { border: 0; background: var(--surface); border-radius: 10px; padding: 4px; gap: 4px; }
+.mode button { border: 0; border-radius: 8px; font-size: 13px; padding: 10px 6px; margin: 0; line-height: 1.35; }
+.mode .active { background: var(--bg); color: var(--text); box-shadow: var(--shadow); border: 0; }
+
+/* ── 단계 (approve → 예치) ── */
+.steps { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 10px; }
+.step { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--bg); }
+.step.done { border-color: var(--ok); background: var(--ok-soft); }
+.step-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; font-weight: 600; font-size: 15px; }
+.step-head button { font-size: 14px; padding: 8px 14px; }
+

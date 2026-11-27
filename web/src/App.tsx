@@ -1,80 +1,38 @@
-import { useEffect, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { useAccount, useBlockNumber } from 'wagmi'
-import { Header } from './components/Header'
-import { Faucet } from './components/Faucet'
-import { CreateDeal } from './components/CreateDeal'
-import { DealList } from './components/DealList'
-import { DealDetail } from './components/DealDetail'
-import { NETWORK_NAME, NOT_DEPLOYED, TARGET_CHAIN } from './network'
+import { useRoute } from './app/router'
+import { NOT_DEPLOYED } from './config/network'
+import { CreateDealScreen } from './features/create-deal/CreateDealScreen'
+import { DealDetailScreen } from './features/deal-detail/DealDetailScreen'
+import { DealsScreen } from './features/deals/DealsScreen'
+import { WalletScreen } from './features/wallet/WalletScreen'
+import { AppBar } from './layout/AppBar'
+import { NotDeployed } from './layout/NotDeployed'
+import { TabBar } from './layout/TabBar'
+import { useRefreshOnNewBlock } from './shared/hooks/useRefreshOnNewBlock'
 
+/**
+ * 앱의 뼈대: 위 앱 바 + 지금 화면 + 아래 탭 바.
+ * 이 파일은 "어떤 화면을 보여줄지"만 정한다. 각 화면의 기능은 features/ 폴더에 있다.
+ */
 export default function App() {
-  const { address } = useAccount()
-  // 선택한 거래를 "어느 계정으로 보고 있었는지"와 함께 저장.
-  // MetaMask에서 계정을 바꾸면 역할이 달라지므로 선택을 자동으로 해제한다.
-  const [selection, setSelection] = useState<{ account?: string; id: bigint }>()
-  const selectedId = selection?.account === address ? selection?.id : undefined
-  const setSelectedId = (id: bigint) => setSelection({ account: address, id })
-  const queryClient = useQueryClient()
+  const { route, go, back } = useRoute()
+  const blockNumber = useRefreshOnNewBlock()
 
-  // [읽기] 새 블록이 생길 때마다 잔고·거래 목록을 다시 읽는다.
-  // 다른 계정(예: 판매자 창)에서 보낸 트랜잭션 결과도 자동으로 반영하기 위함.
-  // (블록체인 상태는 블록 단위로만 바뀌므로, "새 블록 = 다시 읽을 때"다)
-  const { data: blockNumber } = useBlockNumber({ watch: true })
-  useEffect(() => {
-    queryClient.invalidateQueries({
-      predicate: (q) => ['readContract', 'readContracts', 'dealEvents'].includes(q.queryKey[0] as string),
-    })
-  }, [blockNumber, queryClient])
+  if (NOT_DEPLOYED) return <NotDeployed />
 
-  // 이 네트워크에 컨트랙트가 아직 없으면 버튼을 눌러도 실패만 하므로 안내만 보여준다.
-  if (NOT_DEPLOYED) {
-    return (
-      <div className="container">
-        <section className="card">
-          <h2>{NETWORK_NAME}에 아직 배포되지 않았어요</h2>
-          <p className="small">
-            contracts/deployments/{TARGET_CHAIN.id}.json 이 없어요. 컨트랙트를 {NETWORK_NAME}에 배포한 뒤 web/ 폴더에서{' '}
-            <code>npm run sync</code> 를 실행하고 새로고침해 주세요. (docs/SEPOLIA.md 참고)
-          </p>
-        </section>
-      </div>
-    )
-  }
+  const openDeal = (id: bigint) => go({ name: 'deal', id })
 
-  // 화면 구성: 위 앱 바 → 내 거래(피드) → 선택한 거래 상세 → 안전결제 만들기 → 코인 받기 → 아래 탭 바
-  // 아래 탭 바는 각 섹션으로 스크롤하는 바로가기일 뿐, 기능은 그대로다.
   return (
     <div className="app">
-      <Header />
-      <div id="deals">
-        <DealList selectedId={selectedId} onSelect={setSelectedId} />
-      </div>
-      {selectedId !== undefined && <DealDetail id={selectedId} />}
-      <div id="create">
-        <CreateDeal onCreated={setSelectedId} />
-      </div>
-      <div id="wallet">
-        <Faucet />
-      </div>
-      <footer className="muted small">
-        블록 #{blockNumber?.toString() ?? '-'}
-        <br />
-        <span className="tag read">읽기 · 가스 없음</span> <span className="tag write">쓰기 · 트랜잭션</span>{' '}
-        <span className="tag sign">서명 · 가스 없음</span>
-      </footer>
-
-      <nav className="tabbar" aria-label="바로가기">
-        <a href="#deals">
-          <span className="icon">🏠</span>내 거래
-        </a>
-        <a href="#create">
-          <span className="icon">✏️</span>안전결제 만들기
-        </a>
-        <a href="#wallet">
-          <span className="icon">👛</span>코인 받기
-        </a>
-      </nav>
+      <AppBar />
+      {/* key: 화면이 바뀔 때마다 새로 그려서 들어오는 애니메이션이 매번 나오게 */}
+      <main className="screen-body" key={route.name === 'deal' ? `deal-${route.id}` : route.name}>
+        {route.name === 'home' && <DealsScreen onOpen={openDeal} onCreate={() => go({ name: 'create' })} />}
+        {route.name === 'create' && <CreateDealScreen onCreated={openDeal} />}
+        {route.name === 'wallet' && <WalletScreen blockNumber={blockNumber} />}
+        {route.name === 'deal' && <DealDetailScreen id={route.id} onBack={back} />}
+      </main>
+      {/* 상세 화면에서는 탭 바를 숨긴다 (앱에서 상세로 들어가면 아래 탭이 사라지는 것처럼) */}
+      {route.name !== 'deal' && <TabBar active={route.name} onSelect={(name) => go({ name })} />}
     </div>
   )
 }
