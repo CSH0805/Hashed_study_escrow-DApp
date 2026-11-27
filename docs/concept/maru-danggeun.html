@@ -1,0 +1,298 @@
+<title>마루 당근 구상도</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 한 줄 읽기 폭의 문서. 위에서 아래로 "지금 → 구조 → 흐름 → 바뀌는 코드 → 단계 → 근거" 순서 */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --sunk: #f3f1ed;
+  --fg: #1f1d1a;
+  --sub: #5c5850;
+  --muted: #8a857c;
+  --line: #e4e0d9;
+  --accent: #e8620c;
+  --accent-soft: #fdeee3;
+  --chain: #2f6a5a;
+  --chain-soft: #e4f0ec;
+  --off: #4a5a7a;
+  --off-soft: #e8ecf4;
+  --warn: #9a6b00;
+  --warn-soft: #fbf1d9;
+  --font-body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151412; --surface: #1d1c19; --sunk: #24221f; --fg: #ece9e3; --sub: #c2bdb3; --muted: #8f8a80;
+    --line: #34312c; --accent: #ff8a3d; --accent-soft: #3a2415; --chain: #6cc4a8; --chain-soft: #17302a;
+    --off: #9bb0d8; --off-soft: #1c2436; --warn: #e2b34a; --warn-soft: #33290f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151412; --surface: #1d1c19; --sunk: #24221f; --fg: #ece9e3; --sub: #c2bdb3; --muted: #8f8a80;
+  --line: #34312c; --accent: #ff8a3d; --accent-soft: #3a2415; --chain: #6cc4a8; --chain-soft: #17302a;
+  --off: #9bb0d8; --off-soft: #1c2436; --warn: #e2b34a; --warn-soft: #33290f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 760px; margin: 0 auto; padding-block: 48px 72px; display: grid; gap: 56px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.3; margin: 0; }
+h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; }
+h3 { font-size: 15px; font-weight: 700; }
+p { margin: 0; }
+section { display: grid; gap: 16px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 17px; color: var(--sub); max-width: 62ch; }
+.meta { font-size: 13px; color: var(--muted); }
+code { font-family: var(--font-mono); font-size: 0.88em; background: var(--sunk); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 지금 vs 목표 */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.compare > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.compare .to { border-color: var(--accent); }
+.compare ul { margin: 0; padding-left: 18px; color: var(--sub); }
+
+/* 구조도 */
+.arch { display: grid; gap: 0; }
+.layer { display: grid; grid-template-columns: 120px 1fr; gap: 14px; align-items: stretch; }
+.layer-name { font-size: 12px; font-weight: 700; color: var(--muted); padding-top: 14px; text-align: right; }
+.layer-body { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-radius: 10px; min-width: 0; }
+.layer-body.user { background: var(--sunk); }
+.layer-body.app { background: var(--accent-soft); }
+.layer-body.wallet { background: var(--off-soft); }
+.layer-body.chain { background: var(--chain-soft); }
+.layer-body.off { background: var(--surface); border: 1px dashed var(--line); }
+.node { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; flex: 1 1 150px; min-width: 0; display: grid; gap: 2px; }
+.node b { font-size: 14px; }
+.node span { font-size: 12px; color: var(--sub); line-height: 1.5; }
+.node.key { border-color: var(--accent); }
+.node.chainkey { border-color: var(--chain); }
+.link { display: grid; grid-template-columns: 120px 1fr; gap: 14px; }
+.link div:last-child { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding: 6px 0 6px 18px; border-left: 2px solid var(--line); margin-left: 24px; }
+.split { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.split > div { min-width: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--sub); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+/* 거래 흐름 */
+.flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: step; }
+.flow li { counter-increment: step; display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.flow li::before { content: counter(step); font-family: var(--font-mono); font-size: 13px; color: var(--muted); padding-top: 2px; }
+.flow li > div { min-width: 0; display: grid; gap: 2px; }
+.flow small { color: var(--sub); font-size: 13px; line-height: 1.6; }
+.where { font-family: var(--font-mono); font-size: 11px; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+.where.on { color: var(--chain); background: var(--chain-soft); }
+.where.off { color: var(--off); background: var(--off-soft); }
+.where.sign { color: var(--accent); background: var(--accent-soft); }
+
+/* 표 */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 500; background: var(--sunk); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 700; white-space: nowrap; }
+
+/* 단계 */
+.phases { display: grid; gap: 10px; }
+.phase { display: grid; grid-template-columns: 92px 1fr; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.phase > div { min-width: 0; display: grid; gap: 4px; }
+.phase .tag { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 2px; }
+.phase.done { border-color: var(--chain); }
+.phase.done .tag { color: var(--chain); }
+.phase p { color: var(--sub); font-size: 14px; }
+
+.note { background: var(--warn-soft); color: var(--fg); border-radius: 10px; padding: 14px 16px; font-size: 14px; display: grid; gap: 6px; }
+.note b { color: var(--warn); }
+.facts { margin: 0; padding-left: 18px; color: var(--sub); font-size: 14px; display: grid; gap: 4px; }
+
+@media (max-width: 600px) {
+  h1 { font-size: 26px; }
+  .compare, .split { grid-template-columns: 1fr; }
+  .layer, .link { grid-template-columns: 1fr; gap: 4px; }
+  .layer-name { text-align: left; padding-top: 0; }
+  .link div:first-child { display: none; }
+  .phase { grid-template-columns: 1fr; gap: 4px; }
+  .flow li { grid-template-columns: 28px 1fr; }
+  .flow .where { grid-column: 2; justify-self: start; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main>
+  <header style="display:grid;gap:12px">
+    <p class="eyebrow">구상안 · 공개 자료 기반 · 2026-11-27</p>
+    <h1>마루 당근 구상도</h1>
+    <p class="lede">동네 중고거래의 "안전결제"를 마루 테스트넷 위 에스크로 컨트랙트로 처리하는 앱. 지금 만든 스테이블코인 에스크로 디앱을 출발점으로, 원화 스테이블코인(OKRW)과 이메일 로그인 지갑을 붙이는 구상입니다.</p>
+    <p class="meta">현장실습생 개인 학습용 구상이며, 회사 내부 자료 없이 공개된 문서와 발표만 근거로 했습니다. 회사의 실제 계획과 다를 수 있습니다.</p>
+  </header>
+
+  <section>
+    <p class="eyebrow">출발점</p>
+    <h2>지금 만든 것과 목표</h2>
+    <div class="compare">
+      <div>
+        <h3>지금: 스테이블코인 에스크로 디앱</h3>
+        <ul>
+          <li>Anvil · Sepolia에서 동작</li>
+          <li>직접 만든 테스트 토큰 MockUSD (ERC-20, 6자리)</li>
+          <li>MetaMask로 연결, 가스는 ETH</li>
+          <li>approve + 예치 2번, 또는 permit 서명 + 예치</li>
+          <li>화면: 당근형 UI로 변경 완료 (기능은 그대로)</li>
+        </ul>
+      </div>
+      <div class="to">
+        <h3>목표: 마루 당근</h3>
+        <ul>
+          <li>마루 테스트넷 <code>chainId 450815</code></li>
+          <li>체인 기본 화폐인 원화 OKRW로 결제</li>
+          <li>이메일·카카오 로그인 지갑, 수수료 대납</li>
+          <li>예치는 서명 1번 (승인 단계 없음)</li>
+          <li>판매글·채팅은 일반 서버, 돈의 흐름만 체인</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">구조</p>
+    <h2>무엇이 어디에서 돌아가나</h2>
+    <p class="lede" style="font-size:15px">핵심 원칙은 <b>돈과 거래 상태만 체인에, 나머지는 서버에</b>입니다. 판매글 사진이나 채팅을 체인에 올리면 비싸고 느리며, 개인정보가 영구히 공개됩니다.</p>
+
+    <div class="arch" role="img" aria-label="마루 당근 구조도: 사용자, 웹 앱, 지갑 레이어, 마루 체인과 오프체인 서버">
+      <div class="layer">
+        <div class="layer-name">사용자</div>
+        <div class="layer-body user">
+          <div class="node"><b>구매자</b><span>판매글 보고 안전결제 요청</span></div>
+          <div class="node"><b>판매자</b><span>판매글 등록, 대금 수령</span></div>
+        </div>
+      </div>
+      <div class="link"><div></div><div>이메일 · 카카오 로그인</div></div>
+      <div class="layer">
+        <div class="layer-name">마루 당근 웹</div>
+        <div class="layer-body app">
+          <div class="node key"><b>지금 만든 화면</b><span>React · wagmi · viem. 피드, 거래 상세, 안전결제 만들기</span></div>
+          <div class="node"><b>새로 추가</b><span>판매글 목록·등록, 채팅, 매너 정보</span></div>
+        </div>
+      </div>
+      <div class="link"><div></div><div>서명 요청 ↓ · 판매글/채팅 API →</div></div>
+      <div class="split">
+        <div class="layer">
+          <div class="layer-name">지갑 레이어</div>
+          <div class="layer-body wallet">
+            <div class="node"><b>임베디드 지갑</b><span>예: Pouchi. 로그인만으로 스마트 지갑 생성, 키를 직접 관리하지 않음</span></div>
+            <div class="node"><b>수수료 대납</b><span>Paymaster가 가스를 대신 냄</span></div>
+            <div class="node"><b>사용 한도</b><span>PolicyStore로 결제 한도 설정</span></div>
+          </div>
+        </div>
+        <div class="layer" style="grid-template-columns:1fr">
+          <div class="layer-body off" style="height:100%">
+            <div class="node"><b>오프체인 서버</b><span>판매글 · 사진 · 채팅 · 프로필. 일반 DB</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="link"><div></div><div>UserOperation (ERC-4337) → EntryPoint</div></div>
+      <div class="layer">
+        <div class="layer-name">마루 테스트넷</div>
+        <div class="layer-body chain">
+          <div class="node chainkey"><b>Escrow 컨트랙트</b><span>지금 코드에서 OKRW 버전으로 수정. 예치·구매확정·환불·마감 후 지급</span></div>
+          <div class="node"><b>OKRW</b><span>체인 기본 화폐(18자리). ETH처럼 msg.value로 보냄</span></div>
+          <div class="node"><b>PCL</b><span>KYC · 한도 · 블랙리스트를 체인이 검사</span></div>
+          <div class="node"><b>EAS 증명</b><span>본인 확인된 판매자인지 확인</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>내가 만드는 부분</span>
+      <span><i style="background:var(--off-soft)"></i>외부 지갑 서비스</span>
+      <span><i style="background:var(--chain-soft)"></i>체인 위 (공개, 수정 불가)</span>
+      <span><i style="background:var(--surface);border:1px dashed var(--line)"></i>서버 (비공개 데이터)</span>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">거래 흐름</p>
+    <h2>중고 키보드 한 건이 거래되는 과정</h2>
+    <ol class="flow">
+      <li><div><b>판매자가 판매글 등록</b><small>사진, 가격 30,000 OKRW, 동네. 서버 DB에만 저장</small></div><span class="where off">서버</span></li>
+      <li><div><b>구매자가 채팅으로 약속</b><small>만날 장소와 시간 확정. 채팅도 서버</small></div><span class="where off">서버</span></li>
+      <li><div><b>구매자가 "안전결제" 누름</b><small>판매자 주소, 금액, 마감(예: 약속 다음 날)을 채운 예치 화면. 지금 만든 "안전결제 만들기"와 같은 자리</small></div><span class="where sign">서명 1번</span></li>
+      <li><div><b>OKRW가 에스크로에 보관됨</b><small><code>createDeal{value: 30,000 OKRW}</code>. 네이티브 화폐라 approve가 필요 없고, 수수료는 Paymaster가 대납</small></div><span class="where on">체인</span></li>
+      <li><div><b>직거래로 물건 확인</b><small>판매자 화면에는 "결제 완료, 보관 중" 표시. 판매자는 돈이 실제로 맡겨진 걸 체인에서 확인</small></div><span class="where off">오프라인</span></li>
+      <li><div><b>구매자가 구매확정</b><small><code>release</code> → 판매자에게 OKRW 지급. 거래 완료 기록이 매너 정보의 근거가 됨</small></div><span class="where on">체인</span></li>
+      <li><div><b>예외: 취소 또는 연락 두절</b><small>판매자 취소 시 <code>refund</code>로 환불, 구매자가 확정을 안 하면 마감 후 판매자가 <code>claimAfterDeadline</code></small></div><span class="where on">체인</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <p class="eyebrow">코드 변경</p>
+    <h2>지금 코드에서 바뀌는 것</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>부분</th><th>지금</th><th>마루 당근</th></tr></thead>
+        <tbody>
+          <tr><td>결제 화폐</td><td>MockUSD (ERC-20, 6자리)</td><td>OKRW 네이티브 (18자리). MockUSD와 faucet 화면 제거</td></tr>
+          <tr><td>예치 함수</td><td><code>createDeal</code> + <code>transferFrom</code></td><td><code>payable createDeal</code>, <code>msg.value</code>로 금액 받음</td></tr>
+          <tr><td>지급·환불</td><td><code>safeTransfer</code></td><td><code>call{value: …}</code> + 재진입 방지 유지 (CEI 순서가 더 중요해짐)</td></tr>
+          <tr><td>승인 단계</td><td>방식 A approve / 방식 B permit</td><td>필요 없음. 화면의 방식 A/B 선택 제거</td></tr>
+          <tr><td>지갑 연결</td><td>MetaMask (injected)</td><td>임베디드 지갑 SDK. 학습 단계에서는 MetaMask도 병행 가능</td></tr>
+          <tr><td>가스</td><td>사용자가 ETH로 냄</td><td>Paymaster 대납. 가스 한도를 크게 잡으면 절반 이상 청구되므로 추정값 사용</td></tr>
+          <tr><td>네트워크 설정</td><td><code>network.ts</code>: Anvil · Sepolia</td><td><code>maroo</code> 모드 추가, <code>deployments/450815.json</code></td></tr>
+          <tr><td>판매자 확인</td><td>없음</td><td>(선택) EAS 증명으로 KYC된 판매자만 거래 허용</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">진행 순서</p>
+    <h2>단계별 로드맵</h2>
+    <div class="phases">
+      <div class="phase done"><span class="tag">완료</span><div><h3>에스크로 디앱 + 당근형 화면</h3><p>컨트랙트 41개 테스트 통과, Anvil·Sepolia 동작, UI 변경 완료.</p></div></div>
+      <div class="phase"><span class="tag">1단계</span><div><h3>마루 테스트넷에 그대로 배포</h3><p>MetaMask로 마루 체인 연결, faucet에서 OKRW 받아 배포. 체인만 바꾸고 MockUSD 그대로 써서 마루에서 돌아가는지 먼저 확인.</p></div></div>
+      <div class="phase"><span class="tag">2단계</span><div><h3>OKRW 네이티브 에스크로</h3><p>컨트랙트를 payable로 바꾸고 테스트 다시 작성. 화면에서 승인 단계 제거.</p></div></div>
+      <div class="phase"><span class="tag">3단계</span><div><h3>이메일 로그인 지갑 + 수수료 대납</h3><p>임베디드 지갑 SDK로 MetaMask 없이 사용. 앱 등록(테넌트)은 운영자 권한이 필요해 회사 확인 필요.</p></div></div>
+      <div class="phase"><span class="tag">4단계</span><div><h3>당근 기능: 판매글 · 채팅</h3><p>간단한 서버와 DB. 판매글에서 바로 "안전결제"로 이어지게 연결.</p></div></div>
+      <div class="phase"><span class="tag">5단계</span><div><h3>규제와 신뢰</h3><p>EAS로 판매자 본인 확인, PCL에 막힌 거래 안내, 분쟁 시 중재자(arbiter) 기능.</p></div></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">근거</p>
+    <h2>확인된 것과 가정</h2>
+    <div class="compare">
+      <div>
+        <h3>공개 자료로 확인</h3>
+        <ul class="facts">
+          <li>마루는 EVM 호환, Foundry·wagmi·viem 그대로 연결</li>
+          <li>테스트넷 <code>chainId 450815</code>, RPC <code>rpc-testnet.maroo.io</code></li>
+          <li>기본 화폐 OKRW, 소수점 18자리</li>
+          <li>PCL(규제 레이어), EAS(증명), ERC-8004(에이전트)</li>
+          <li>Pouchi: 이메일 로그인 지갑, Paymaster, 정책 한도 (ERC-4337)</li>
+        </ul>
+      </div>
+      <div>
+        <h3>직접 확인해야 할 것</h3>
+        <ul class="facts">
+          <li>컨트랙트 배포에 KYC가 필요한지</li>
+          <li>PCL이 컨트랙트 간 OKRW 이동을 어떻게 검사하는지</li>
+          <li>EAS 증명을 컨트랙트에서 읽는 정확한 방법</li>
+          <li>Pouchi 앱 등록 절차와 대납 비용 부담 주체</li>
+          <li>Solidity 0.8.30 컴파일 결과가 마루에서 그대로 도는지</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">
+      <b>참고</b>
+      <p>"마루 당근"은 회사가 제안한 작업 이름이며, 이 문서는 실제 서비스나 회사 공식 계획이 아닙니다. 출처: <a href="https://docs.maroo.io/" target="_blank" rel="noreferrer">Maroo Docs</a>, <a href="https://chainwire.org/2026/05/07/hashed-open-finance-launch-testnet-of-maroo-first-sovereign-l1-blockchain-for-krw-stablecoins-and-ai-agents/" target="_blank" rel="noreferrer">마루 테스트넷 발표 (2026-05)</a>, Pouchi 개발 문서.</p>
+    </div>
+  </section>
+</main>
