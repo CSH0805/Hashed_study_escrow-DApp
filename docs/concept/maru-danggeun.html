@@ -124,50 +124,105 @@ td:first-child { font-weight: 700; white-space: nowrap; }
   .flow li { grid-template-columns: 28px 1fr; }
   .flow .where { grid-column: 2; justify-self: start; }
 }
+
+/* 화면 구성 */
+.screens { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.screen { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.screen .bar { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.screen b { font-size: 14px; }
+.screen ul { margin: 0; padding-left: 16px; font-size: 13px; color: var(--sub); line-height: 1.6; }
+.tree { background: var(--sunk); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; overflow-x: auto; margin: 0; color: var(--sub); }
+.tree b { color: var(--fg); font-weight: 500; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14px; margin: 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .screens { grid-template-columns: 1fr 1fr; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
 <main>
   <header style="display:grid;gap:12px">
-    <p class="eyebrow">구상안 · 공개 자료 기반 · 2026-11-27</p>
+    <p class="eyebrow">최종 정리 · 공개 자료 기반</p>
     <h1>마루 당근 구상도</h1>
-    <p class="lede">동네 중고거래의 "안전결제"를 마루 테스트넷 위 에스크로 컨트랙트로 처리하는 앱. 지금 만든 스테이블코인 에스크로 디앱을 출발점으로, 원화 스테이블코인(OKRW)과 이메일 로그인 지갑을 붙이는 구상입니다.</p>
+    <p class="lede">동네 중고거래의 "안전결제"를 스마트 컨트랙트 에스크로로 처리하는 웹 서비스. 이더리움(Anvil · Sepolia)에서 완성한 스테이블코인 에스크로 디앱을 출발점으로, 마루 테스트넷의 원화 스테이블코인(OKRW)과 로그인 지갑을 붙이는 구상입니다.</p>
     <p class="meta">현장실습생 개인 학습용 구상이며, 회사 내부 자료 없이 공개된 문서와 발표만 근거로 했습니다. 회사의 실제 계획과 다를 수 있습니다.</p>
   </header>
 
   <section>
-    <p class="eyebrow">출발점</p>
-    <h2>지금 만든 것과 목표</h2>
+    <p class="eyebrow">지금까지</p>
+    <h2>완성한 것과 다음 목표</h2>
     <div class="compare">
       <div>
-        <h3>지금: 스테이블코인 에스크로 디앱</h3>
+        <h3>완성: 스테이블코인 에스크로 웹</h3>
         <ul>
-          <li>Anvil · Sepolia에서 동작</li>
-          <li>직접 만든 테스트 토큰 MockUSD (ERC-20, 6자리)</li>
-          <li>MetaMask로 연결, 가스는 ETH</li>
-          <li>approve + 예치 2번, 또는 permit 서명 + 예치</li>
-          <li>화면: 당근형 UI로 변경 완료 (기능은 그대로)</li>
+          <li>컨트랙트 2개(MockUSD, Escrow), Foundry 테스트 41개 통과</li>
+          <li>로컬 Anvil과 <b>Sepolia 테스트넷에 배포</b>, Etherscan에서 누구나 조회</li>
+          <li>방식 A approve + 예치 / 방식 B permit 서명 + 예치</li>
+          <li>거래 내역 타임라인(이벤트 로그), 가스·수수료 표시</li>
+          <li><b>앱처럼 보이는 웹</b>: 탭 바, 상세 화면, 홈 화면에 추가</li>
+          <li>웹 코드를 기능별 파일로 분리</li>
         </ul>
       </div>
       <div class="to">
-        <h3>목표: 마루 당근</h3>
+        <h3>다음: 마루 당근</h3>
         <ul>
           <li>마루 테스트넷 <code>chainId 450815</code></li>
           <li>체인 기본 화폐인 원화 OKRW로 결제</li>
-          <li>이메일·카카오 로그인 지갑, 수수료 대납</li>
+          <li>이메일·카카오 로그인 지갑(Pouchi), 수수료 대납</li>
           <li>예치는 서명 1번 (승인 단계 없음)</li>
+          <li>(선택) EAS 증명으로 본인 확인된 판매자</li>
           <li>판매글·채팅은 일반 서버, 돈의 흐름만 체인</li>
         </ul>
       </div>
     </div>
+    <dl class="kv">
+      <dt>Sepolia Escrow</dt><dd><a href="https://sepolia.etherscan.io/address/0xe535341775C425Bac0D400B6b2de17d64D39f65d" target="_blank" rel="noreferrer"><code>0xe535341775C425Bac0D400B6b2de17d64D39f65d</code></a></dd>
+      <dt>Sepolia MockUSD</dt><dd><a href="https://sepolia.etherscan.io/address/0xe7E19390D9F56010B20a8A2cDb0254FdeB86e144" target="_blank" rel="noreferrer"><code>0xe7E19390D9F56010B20a8A2cDb0254FdeB86e144</code></a></dd>
+      <dt>배포 블록</dt><dd><code>12206725</code></dd>
+    </dl>
+  </section>
+
+  <section>
+    <p class="eyebrow">결정</p>
+    <h2>앱 대신 "앱처럼 보이는 웹"</h2>
+    <p class="lede" style="font-size:15px">스토어에 올리는 모바일 앱은 만들지 않기로 했습니다. 지갑 연결과 서명은 웹에서 그대로 되고, 휴대폰 폭 레이아웃과 탭 이동, 홈 화면 추가만으로 사용 경험은 앱과 거의 같기 때문입니다. 링크 하나로 리뷰어가 바로 써 볼 수 있다는 장점도 있습니다.</p>
+    <div class="screens" role="list" aria-label="웹 화면 네 개">
+      <div class="screen" role="listitem"><span class="bar">#/</span><b>🏠 내 거래</b><ul><li>구매내역 / 판매내역 탭</li><li>상품 카드형 목록</li><li>+ 안전결제 버튼</li></ul></div>
+      <div class="screen" role="listitem"><span class="bar">#/create</span><b>✏️ 안전결제</b><ul><li>판매자·물건·가격·마감</li><li>방식 A / 방식 B</li><li>단계별 진행 상황</li></ul></div>
+      <div class="screen" role="listitem"><span class="bar">#/wallet</span><b>👛 내 지갑</b><ul><li>잔고와 주소</li><li>테스트 코인 받기</li><li>최신 블록 번호</li></ul></div>
+      <div class="screen" role="listitem"><span class="bar">#/deal/3</span><b>← 거래 상세</b><ul><li>내 역할별 버튼</li><li>구매확정·취소·마감 후 지급</li><li>거래 내역 타임라인</li></ul></div>
+    </div>
+    <p class="meta">주소의 <code>#</code> 뒤로 화면을 바꾸므로 새로고침과 휴대폰 뒤로 가기가 그대로 동작합니다. <code>manifest.webmanifest</code>와 아이콘을 넣어 홈 화면에 추가하면 주소창 없이 열립니다.</p>
+  </section>
+
+  <section>
+    <p class="eyebrow">코드 구조</p>
+    <h2>기능별로 나눈 웹 코드</h2>
+    <p class="lede" style="font-size:15px">한 파일에는 한 가지 일만 둡니다. 화면은 <code>features/</code>에 기능별 폴더로, 여러 화면이 같이 쓰는 것은 <code>shared/</code>에 둡니다. 가장 컸던 300줄짜리 거래 만들기 파일은 입력·검사·승인·서명·예치로 나눠 10개 파일이 됐습니다.</p>
+<pre class="tree"><b>web/src/</b>
+├── App.tsx             어떤 화면을 보여줄지만 정함
+├── app/router.ts       화면 전환 (#/, #/create, #/wallet, #/deal/N)
+├── config/             network.ts(체인·주소 선택), wagmi.ts(지갑·RPC)
+├── layout/             AppBar, TabBar, ScreenHeader(← 뒤로), NotDeployed
+├── <b>features/</b>
+│   ├── deals/          내 거래 목록
+│   ├── deal-detail/    거래 상세 · 역할별 버튼 · 타임라인
+│   ├── create-deal/    입력 · 검사 · approve · permit · 예치
+│   └── wallet/         지갑 연결 · 잔고 · 테스트 코인 · 네트워크 경고
+├── <b>shared/</b>
+│   ├── hooks/          useTx(쓰기 공통), usePermitSign, useChainNow …
+│   ├── lib/            한국어 오류, 금액·시간 형식, 거래 상태
+│   └── ui/             TxStatus, Step, Tag, StatusBadge, EmptyState
+└── styles/             tokens · base · layout · form · feedback · deals · detail</pre>
+    <p class="meta">마루로 옮길 때도 이 구조 덕분에 바꿀 곳이 좁습니다. 체인은 <code>config/</code>, 결제 방식은 <code>features/create-deal/</code>, 지갑 연결은 <code>features/wallet/</code>만 보면 됩니다.</p>
   </section>
 
   <section>
     <p class="eyebrow">구조</p>
-    <h2>무엇이 어디에서 돌아가나</h2>
+    <h2>마루 당근에서 무엇이 어디에서 돌아가나</h2>
     <p class="lede" style="font-size:15px">핵심 원칙은 <b>돈과 거래 상태만 체인에, 나머지는 서버에</b>입니다. 판매글 사진이나 채팅을 체인에 올리면 비싸고 느리며, 개인정보가 영구히 공개됩니다.</p>
 
-    <div class="arch" role="img" aria-label="마루 당근 구조도: 사용자, 웹 앱, 지갑 레이어, 마루 체인과 오프체인 서버">
+    <div class="arch" role="img" aria-label="마루 당근 구조도: 사용자, 웹, 지갑 레이어, 마루 체인과 오프체인 서버">
       <div class="layer">
         <div class="layer-name">사용자</div>
         <div class="layer-body user">
@@ -175,11 +230,11 @@ td:first-child { font-weight: 700; white-space: nowrap; }
           <div class="node"><b>판매자</b><span>판매글 등록, 대금 수령</span></div>
         </div>
       </div>
-      <div class="link"><div></div><div>이메일 · 카카오 로그인</div></div>
+      <div class="link"><div></div><div>이메일 · 카카오 로그인 (Pouchi가 제공)</div></div>
       <div class="layer">
         <div class="layer-name">마루 당근 웹</div>
         <div class="layer-body app">
-          <div class="node key"><b>지금 만든 화면</b><span>React · wagmi · viem. 피드, 거래 상세, 안전결제 만들기</span></div>
+          <div class="node key"><b>지금 만든 웹</b><span>React · wagmi · viem. 앱처럼 보이는 4개 화면</span></div>
           <div class="node"><b>새로 추가</b><span>판매글 목록·등록, 채팅, 매너 정보</span></div>
         </div>
       </div>
@@ -188,7 +243,7 @@ td:first-child { font-weight: 700; white-space: nowrap; }
         <div class="layer">
           <div class="layer-name">지갑 레이어</div>
           <div class="layer-body wallet">
-            <div class="node"><b>임베디드 지갑</b><span>예: Pouchi. 로그인만으로 스마트 지갑 생성, 키를 직접 관리하지 않음</span></div>
+            <div class="node"><b>Pouchi 지갑</b><span>로그인만으로 지갑 생성, 키를 직접 관리하지 않음. wagmi 커넥터 제공</span></div>
             <div class="node"><b>수수료 대납</b><span>Paymaster가 가스를 대신 냄</span></div>
             <div class="node"><b>사용 한도</b><span>PolicyStore로 결제 한도 설정</span></div>
           </div>
@@ -206,7 +261,7 @@ td:first-child { font-weight: 700; white-space: nowrap; }
           <div class="node chainkey"><b>Escrow 컨트랙트</b><span>지금 코드에서 OKRW 버전으로 수정. 예치·구매확정·환불·마감 후 지급</span></div>
           <div class="node"><b>OKRW</b><span>체인 기본 화폐(18자리). ETH처럼 msg.value로 보냄</span></div>
           <div class="node"><b>PCL</b><span>KYC · 한도 · 블랙리스트를 체인이 검사</span></div>
-          <div class="node"><b>EAS 증명</b><span>본인 확인된 판매자인지 확인</span></div>
+          <div class="node"><b>EAS 증명</b><span>본인 확인된 주소인지 확인</span></div>
         </div>
       </div>
     </div>
@@ -224,7 +279,7 @@ td:first-child { font-weight: 700; white-space: nowrap; }
     <ol class="flow">
       <li><div><b>판매자가 판매글 등록</b><small>사진, 가격 30,000 OKRW, 동네. 서버 DB에만 저장</small></div><span class="where off">서버</span></li>
       <li><div><b>구매자가 채팅으로 약속</b><small>만날 장소와 시간 확정. 채팅도 서버</small></div><span class="where off">서버</span></li>
-      <li><div><b>구매자가 "안전결제" 누름</b><small>판매자 주소, 금액, 마감(예: 약속 다음 날)을 채운 예치 화면. 지금 만든 "안전결제 만들기"와 같은 자리</small></div><span class="where sign">서명 1번</span></li>
+      <li><div><b>구매자가 "안전결제" 누름</b><small>판매자 주소, 금액, 마감(예: 약속 다음 날)을 채운 예치 화면. 지금 만든 "안전결제" 탭과 같은 자리</small></div><span class="where sign">서명 1번</span></li>
       <li><div><b>OKRW가 에스크로에 보관됨</b><small><code>createDeal{value: 30,000 OKRW}</code>. 네이티브 화폐라 approve가 필요 없고, 수수료는 Paymaster가 대납</small></div><span class="where on">체인</span></li>
       <li><div><b>직거래로 물건 확인</b><small>판매자 화면에는 "결제 완료, 보관 중" 표시. 판매자는 돈이 실제로 맡겨진 걸 체인에서 확인</small></div><span class="where off">오프라인</span></li>
       <li><div><b>구매자가 구매확정</b><small><code>release</code> → 판매자에게 OKRW 지급. 거래 완료 기록이 매너 정보의 근거가 됨</small></div><span class="where on">체인</span></li>
@@ -233,20 +288,43 @@ td:first-child { font-weight: 700; white-space: nowrap; }
   </section>
 
   <section>
+    <p class="eyebrow">신원 확인</p>
+    <h2>카카오 로그인, KYC, EAS는 서로 다른 것</h2>
+    <p class="lede" style="font-size:15px">마루 디앱이라고 KYC가 꼭 필요한 건 아닙니다. 마루에는 누구나 쓰는 <b>Open Path</b>와 사전 확인이 필요한 <b>Regulated Path</b>가 함께 있고, 한도 같은 규제가 걸리는 거래에만 본인 확인이 필요합니다.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>단계</th><th>증명하는 것</th><th>누가 하나</th><th>디앱이 할 일</th></tr></thead>
+        <tbody>
+          <tr><td>카카오 로그인</td><td>이 사람이 이 카카오 계정의 주인</td><td>Pouchi (카카오 OAuth)</td><td>로그인 수단 켜기. 운영자 서버 설정과 redirect URI 등록 필요. 코드는 거의 없음</td></tr>
+          <tr><td>KYC</td><td>이 사람이 실명으로 실존하는 사람</td><td>허가받은 KYC 서비스 (마루 테스트넷: <code>kyc-testnet.maroo.io</code>)</td><td>없음. 신분증을 받지 않고 개인정보를 저장하지 않음</td></tr>
+          <tr><td>EAS 증명</td><td>이 지갑 주소는 본인 확인을 마쳤다</td><td>KYC 서비스가 체인에 기록</td><td>읽기만 함. 예: 증명 없는 판매자와의 거래 생성 거부</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ol class="flow">
+      <li><div><b>로그인</b><small>카카오로 로그인하면 Pouchi가 지갑 주소를 만들어 줌</small></div><span class="where off">Pouchi</span></li>
+      <li><div><b>본인 확인 (필요할 때만)</b><small>KYC 서비스에서 신분 확인. 체인 밖에서 진행</small></div><span class="where off">KYC 서비스</span></li>
+      <li><div><b>증명 기록</b><small>지갑 주소에 "확인됨" 증명이 남음. 이름·주민번호는 체인에 올라가지 않음</small></div><span class="where on">체인</span></li>
+      <li><div><b>디앱이 확인</b><small>컨트랙트나 화면이 증명 유무만 읽어서 규칙 적용</small></div><span class="where on">체인</span></li>
+    </ol>
+    <p class="meta">"체인 밖에서 확인하고, 체인에는 결과만 서명해서 남긴다"는 점에서 permit 서명과 같은 원리입니다.</p>
+  </section>
+
+  <section>
     <p class="eyebrow">코드 변경</p>
-    <h2>지금 코드에서 바뀌는 것</h2>
+    <h2>마루로 옮길 때 바뀌는 것</h2>
     <div class="table-wrap">
       <table>
         <thead><tr><th>부분</th><th>지금</th><th>마루 당근</th></tr></thead>
         <tbody>
-          <tr><td>결제 화폐</td><td>MockUSD (ERC-20, 6자리)</td><td>OKRW 네이티브 (18자리). MockUSD와 faucet 화면 제거</td></tr>
+          <tr><td>결제 화폐</td><td>MockUSD (ERC-20, 6자리)</td><td>OKRW 네이티브 (18자리). MockUSD와 테스트 코인 화면 제거</td></tr>
           <tr><td>예치 함수</td><td><code>createDeal</code> + <code>transferFrom</code></td><td><code>payable createDeal</code>, <code>msg.value</code>로 금액 받음</td></tr>
           <tr><td>지급·환불</td><td><code>safeTransfer</code></td><td><code>call{value: …}</code> + 재진입 방지 유지 (CEI 순서가 더 중요해짐)</td></tr>
-          <tr><td>승인 단계</td><td>방식 A approve / 방식 B permit</td><td>필요 없음. 화면의 방식 A/B 선택 제거</td></tr>
-          <tr><td>지갑 연결</td><td>MetaMask (injected)</td><td>임베디드 지갑 SDK. 학습 단계에서는 MetaMask도 병행 가능</td></tr>
+          <tr><td>승인 단계</td><td>방식 A approve / 방식 B permit</td><td>필요 없음. <code>PaymentModeTabs</code>, <code>ApproveFlow</code>, <code>PermitFlow</code> 제거</td></tr>
+          <tr><td>지갑 연결</td><td>MetaMask (<code>injected</code>)</td><td>Pouchi <code>ncWaasConnector</code>. wagmi 설정만 교체, 학습 단계에서는 MetaMask 병행 가능</td></tr>
           <tr><td>가스</td><td>사용자가 ETH로 냄</td><td>Paymaster 대납. 가스 한도를 크게 잡으면 절반 이상 청구되므로 추정값 사용</td></tr>
-          <tr><td>네트워크 설정</td><td><code>network.ts</code>: Anvil · Sepolia</td><td><code>maroo</code> 모드 추가, <code>deployments/450815.json</code></td></tr>
-          <tr><td>판매자 확인</td><td>없음</td><td>(선택) EAS 증명으로 KYC된 판매자만 거래 허용</td></tr>
+          <tr><td>네트워크 설정</td><td><code>config/network.ts</code>: Anvil · Sepolia</td><td><code>maroo</code> 모드 추가, <code>deployments/450815.json</code></td></tr>
+          <tr><td>판매자 확인</td><td>없음</td><td>(선택) EAS 증명으로 본인 확인된 판매자만 거래 허용</td></tr>
         </tbody>
       </table>
     </div>
@@ -256,10 +334,12 @@ td:first-child { font-weight: 700; white-space: nowrap; }
     <p class="eyebrow">진행 순서</p>
     <h2>단계별 로드맵</h2>
     <div class="phases">
-      <div class="phase done"><span class="tag">완료</span><div><h3>에스크로 디앱 + 당근형 화면</h3><p>컨트랙트 41개 테스트 통과, Anvil·Sepolia 동작, UI 변경 완료.</p></div></div>
-      <div class="phase"><span class="tag">1단계</span><div><h3>마루 테스트넷에 그대로 배포</h3><p>MetaMask로 마루 체인 연결, faucet에서 OKRW 받아 배포. 체인만 바꾸고 MockUSD 그대로 써서 마루에서 돌아가는지 먼저 확인.</p></div></div>
+      <div class="phase done"><span class="tag">완료</span><div><h3>에스크로 디앱</h3><p>컨트랙트와 테스트 41개, approve·permit 두 방식, 거래 내역 타임라인과 가스 표시.</p></div></div>
+      <div class="phase done"><span class="tag">완료</span><div><h3>Sepolia 테스트넷 배포</h3><p>공개 테스트넷에 배포해 Etherscan에서 누구나 확인. <code>npm run dev:sepolia</code>로 같은 화면 사용.</p></div></div>
+      <div class="phase done"><span class="tag">완료</span><div><h3>앱처럼 보이는 웹 + 코드 정리</h3><p>탭 바 4개 화면, 홈 화면 추가, 기능별 파일 분리.</p></div></div>
+      <div class="phase"><span class="tag">1단계</span><div><h3>마루 테스트넷에 그대로 배포</h3><p>MetaMask로 마루 체인 연결, faucet에서 OKRW 받아 배포. MockUSD 그대로 써서 마루에서 돌아가는지 먼저 확인.</p></div></div>
       <div class="phase"><span class="tag">2단계</span><div><h3>OKRW 네이티브 에스크로</h3><p>컨트랙트를 payable로 바꾸고 테스트 다시 작성. 화면에서 승인 단계 제거.</p></div></div>
-      <div class="phase"><span class="tag">3단계</span><div><h3>이메일 로그인 지갑 + 수수료 대납</h3><p>임베디드 지갑 SDK로 MetaMask 없이 사용. 앱 등록(테넌트)은 운영자 권한이 필요해 회사 확인 필요.</p></div></div>
+      <div class="phase"><span class="tag">3단계</span><div><h3>로그인 지갑 + 수수료 대납</h3><p>Pouchi로 MetaMask 없이 이메일·카카오 로그인. 앱 등록(테넌트)과 카카오 설정은 운영자 권한이 필요해 회사 확인 필요.</p></div></div>
       <div class="phase"><span class="tag">4단계</span><div><h3>당근 기능: 판매글 · 채팅</h3><p>간단한 서버와 DB. 판매글에서 바로 "안전결제"로 이어지게 연결.</p></div></div>
       <div class="phase"><span class="tag">5단계</span><div><h3>규제와 신뢰</h3><p>EAS로 판매자 본인 확인, PCL에 막힌 거래 안내, 분쟁 시 중재자(arbiter) 기능.</p></div></div>
     </div>
@@ -276,7 +356,8 @@ td:first-child { font-weight: 700; white-space: nowrap; }
           <li>테스트넷 <code>chainId 450815</code>, RPC <code>rpc-testnet.maroo.io</code></li>
           <li>기본 화폐 OKRW, 소수점 18자리</li>
           <li>PCL(규제 레이어), EAS(증명), ERC-8004(에이전트)</li>
-          <li>Pouchi: 이메일 로그인 지갑, Paymaster, 정책 한도 (ERC-4337)</li>
+          <li>Pouchi: 이메일 기본, 카카오·네이버·구글·애플은 운영자가 켜야 함</li>
+          <li>Pouchi: Paymaster 대납, 정책 한도, wagmi 커넥터</li>
         </ul>
       </div>
       <div>
@@ -284,7 +365,8 @@ td:first-child { font-weight: 700; white-space: nowrap; }
         <ul class="facts">
           <li>컨트랙트 배포에 KYC가 필요한지</li>
           <li>PCL이 컨트랙트 간 OKRW 이동을 어떻게 검사하는지</li>
-          <li>EAS 증명을 컨트랙트에서 읽는 정확한 방법</li>
+          <li>EAS 증명을 컨트랙트에서 읽는 방법 (주소, 스키마). Pouchi 문서에는 없음</li>
+          <li>KYC 테스트 절차 (<code>kyc-testnet.maroo.io</code>)</li>
           <li>Pouchi 앱 등록 절차와 대납 비용 부담 주체</li>
           <li>Solidity 0.8.30 컴파일 결과가 마루에서 그대로 도는지</li>
         </ul>
@@ -292,7 +374,7 @@ td:first-child { font-weight: 700; white-space: nowrap; }
     </div>
     <div class="note">
       <b>참고</b>
-      <p>"마루 당근"은 회사가 제안한 작업 이름이며, 이 문서는 실제 서비스나 회사 공식 계획이 아닙니다. 출처: <a href="https://docs.maroo.io/" target="_blank" rel="noreferrer">Maroo Docs</a>, <a href="https://chainwire.org/2026/05/07/hashed-open-finance-launch-testnet-of-maroo-first-sovereign-l1-blockchain-for-krw-stablecoins-and-ai-agents/" target="_blank" rel="noreferrer">마루 테스트넷 발표 (2026-05)</a>, Pouchi 개발 문서.</p>
+      <p>"마루 당근"은 회사가 제안한 작업 이름이며, 이 문서는 실제 서비스나 회사 공식 계획이 아닙니다. 출처: <a href="https://docs.maroo.io/" target="_blank" rel="noreferrer">Maroo Docs</a>, <a href="https://chainwire.org/2026/05/07/hashed-open-finance-launch-testnet-of-maroo-first-sovereign-l1-blockchain-for-krw-stablecoins-and-ai-agents/" target="_blank" rel="noreferrer">마루 테스트넷 발표 (2026-05)</a>, Pouchi 개발 문서(빠른 시작, React SDK).</p>
     </div>
   </section>
 </main>
