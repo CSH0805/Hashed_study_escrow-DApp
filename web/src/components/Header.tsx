@@ -28,19 +28,18 @@ export function Header() {
 
   return (
     <header className="header">
-      <div>
-        <h1>스테이블코인 에스크로</h1>
-        <p className="muted small">
+      <div className="brand">
+        <span className="brand-mark" aria-hidden>
+          🥕
+        </span>
+        <div>
+          <h1>
+            <span className="brand-name">마루 당근</span>
+          </h1>
+          <p className="muted small brand-sub">
           {IS_LOCAL ? '로컬 Anvil 체인(31337)' : `${NETWORK_NAME}(${TARGET_CHAIN.id})`} · 마지막 블록 시각 {lastBlockTime ? formatTime(lastBlockTime) : '연결 중…'}
-        </p>
-        {EXPLORER_URL && (
-          <p className="muted small">
-            ⚠️ 테스트넷이에요. 실제 자산이 든 지갑은 연결하지 마세요.{' '}
-            <a href={`${EXPLORER_URL}/address/${MOCK_USD_ADDRESS}`} target="_blank" rel="noreferrer">
-              Etherscan에서 컨트랙트 보기
-            </a>
           </p>
-        )}
+        </div>
       </div>
 
       <div className="wallet">
@@ -57,17 +56,28 @@ export function Header() {
             {connectError && <span className="error small">{toKoreanError(connectError, 'connect')}</span>}
           </>
         ) : (
-          <>
+          <div className="wallet-chip">
             <div className="right">
-              <div className="mono" title={address}>
+              <div className="balance">{formatMusd(balance)} mUSD</div>
+              <div className="mono small muted" title={address}>
                 {shortAddress(address)}
               </div>
-              <div className="balance">{formatMusd(balance)} mUSD</div>
             </div>
-            <button onClick={() => disconnect()}>연결 해제</button>
-          </>
+            <button className="ghost" onClick={() => disconnect()}>
+              연결 해제
+            </button>
+          </div>
         )}
       </div>
+
+      {EXPLORER_URL && (
+        <p className="muted small notice">
+          ⚠️ 테스트넷이에요. 실제 자산이 든 지갑은 연결하지 마세요.{' '}
+          <a href={`${EXPLORER_URL}/address/${MOCK_USD_ADDRESS}`} target="_blank" rel="noreferrer">
+            Etherscan에서 컨트랙트 보기
+          </a>
+        </p>
+      )}
 
       {wrongChain && (
         <div className="warn full">

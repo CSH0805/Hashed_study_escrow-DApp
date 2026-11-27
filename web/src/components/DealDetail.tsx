@@ -44,21 +44,30 @@ export function DealDetail({ id }: { id: bigint }) {
 
   return (
     <section className="card">
-      <h2>
-        거래 #{id.toString()} 상세 <span className={`badge s${deal.status}`}>{STATUS_LABEL[deal.status]}</span>
-      </h2>
+      {/* 상품 상세 화면처럼: 상대방 프로필 → 제목·가격 → 거래 정보 → 아래 버튼 */}
+      <div className="profile">
+        <span className="avatar" aria-hidden>
+          {role === '구매자' ? '🛒' : role === '판매자' ? '🏷️' : '👀'}
+        </span>
+        <div className="profile-body">
+          <strong>나는 {role}</strong>
+          <div className="muted small">
+            거래 #{id.toString()} · 에스크로 컨트랙트가 돈을 보관 중
+          </div>
+        </div>
+      </div>
+
+      <p className="detail-title">
+        <span className={`badge s${deal.status}`}>{STATUS_LABEL[deal.status]}</span>{' '}
+        {deal.description || <span className="muted">(설명 없음)</span>}
+      </p>
+      <p className="detail-price">{formatMusd(deal.amount)} mUSD</p>
 
       <dl className="detail">
-        <dt>내 역할</dt>
-        <dd>
-          <strong>{role}</strong>
-        </dd>
         <dt>구매자</dt>
         <dd className="mono">{deal.buyer}</dd>
         <dt>판매자</dt>
         <dd className="mono">{deal.seller}</dd>
-        <dt>금액</dt>
-        <dd>{formatMusd(deal.amount)} mUSD</dd>
         <dt>마감</dt>
         <dd>
           {formatTime(deal.deadline)}{' '}
@@ -66,13 +75,11 @@ export function DealDetail({ id }: { id: bigint }) {
             {deadlinePassed ? '(마감 지남)' : `(${formatDuration(Number(deal.deadline) - now)} 남음)`}
           </span>
         </dd>
-        <dt>설명</dt>
-        <dd>{deal.description || <span className="muted">(없음)</span>}</dd>
       </dl>
 
       {/* 끝난 거래: 결과만 */}
       {!funded && (
-        <p className="ok">
+        <p className="result ok">
           {deal.status === STATUS.Released
             ? `✅ 판매자에게 ${formatMusd(deal.amount)} mUSD가 지급됐어요.`
             : `↩️ 구매자에게 ${formatMusd(deal.amount)} mUSD가 환불됐어요.`}
@@ -82,7 +89,7 @@ export function DealDetail({ id }: { id: bigint }) {
       {/* 구매자 + 진행중 */}
       {funded && role === '구매자' && (
         <div className="actions">
-          <button className="primary" disabled={tx.busy} onClick={() => call('release')}>
+          <button className="primary block" disabled={tx.busy} onClick={() => call('release')}>
             구매확정 (판매자에게 지급)
           </button>
           <p className="muted small">물건을 잘 받았다면 눌러 주세요. 되돌릴 수 없어요.</p>

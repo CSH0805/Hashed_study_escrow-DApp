@@ -42,17 +42,39 @@ export default function App() {
     )
   }
 
+  // 화면 구성: 위 앱 바 → 내 거래(피드) → 선택한 거래 상세 → 안전결제 만들기 → 코인 받기 → 아래 탭 바
+  // 아래 탭 바는 각 섹션으로 스크롤하는 바로가기일 뿐, 기능은 그대로다.
   return (
-    <div className="container">
+    <div className="app">
       <Header />
-      <Faucet />
-      <CreateDeal onCreated={setSelectedId} />
-      <DealList selectedId={selectedId} onSelect={setSelectedId} />
+      <div id="deals">
+        <DealList selectedId={selectedId} onSelect={setSelectedId} />
+      </div>
       {selectedId !== undefined && <DealDetail id={selectedId} />}
+      <div id="create">
+        <CreateDeal onCreated={setSelectedId} />
+      </div>
+      <div id="wallet">
+        <Faucet />
+      </div>
       <footer className="muted small">
-        블록 번호 {blockNumber?.toString() ?? '-'} · 표시: <span className="tag read">읽기 · 가스 없음</span>{' '}
-        <span className="tag write">쓰기 · 트랜잭션</span>
+        블록 #{blockNumber?.toString() ?? '-'}
+        <br />
+        <span className="tag read">읽기 · 가스 없음</span> <span className="tag write">쓰기 · 트랜잭션</span>{' '}
+        <span className="tag sign">서명 · 가스 없음</span>
       </footer>
+
+      <nav className="tabbar" aria-label="바로가기">
+        <a href="#deals">
+          <span className="icon">🏠</span>내 거래
+        </a>
+        <a href="#create">
+          <span className="icon">✏️</span>안전결제 만들기
+        </a>
+        <a href="#wallet">
+          <span className="icon">👛</span>코인 받기
+        </a>
+      </nav>
     </div>
   )
 }

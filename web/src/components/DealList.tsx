@@ -40,47 +40,55 @@ export function DealList({ selectedId, onSelect }: { selectedId?: bigint; onSele
   return (
     <section className="card">
       <h2>
-        내 거래 목록 <span className="tag read">읽기 · 가스 없음</span>
+        나의 안전거래 <span className="tag read">읽기 · 가스 없음</span>
       </h2>
       <div className="tabs">
         <button className={tab === 'buyer' ? 'active' : ''} onClick={() => setTab('buyer')}>
-          내가 구매자인 거래
+          구매내역
         </button>
         <button className={tab === 'seller' ? 'active' : ''} onClick={() => setTab('seller')}>
-          내가 판매자인 거래
+          판매내역
         </button>
       </div>
 
       {!address ? (
-        <p className="muted">지갑을 연결하면 목록이 보여요.</p>
+        <p className="empty">
+          <span className="empty-icon">👛</span>지갑을 연결하면 목록이 보여요.
+        </p>
       ) : sortedIds.length === 0 ? (
-        <p className="muted">아직 거래가 없어요.</p>
+        <p className="empty">
+          <span className="empty-icon">📦</span>아직 거래가 없어요.
+        </p>
       ) : (
-        <table className="deals">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>{tab === 'buyer' ? '판매자' : '구매자'}</th>
-              <th>금액</th>
-              <th>마감</th>
-              <th>상태</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedIds.map((id, i) => {
-              const deal = deals?.[i]?.result
-              return (
-                <tr key={id.toString()} className={selectedId === id ? 'selected' : ''} onClick={() => onSelect(id)}>
-                  <td>{id.toString()}</td>
-                  <td className="mono">{deal ? shortAddress(tab === 'buyer' ? deal.seller : deal.buyer) : '…'}</td>
-                  <td>{deal ? `${formatMusd(deal.amount)} mUSD` : '…'}</td>
-                  <td className="small">{deal ? formatTime(deal.deadline) : '…'}</td>
-                  <td>{deal ? <span className={`badge s${deal.status}`}>{STATUS_LABEL[deal.status]}</span> : '…'}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        <ul className="feed">
+          {sortedIds.map((id, i) => {
+            const deal = deals?.[i]?.result
+            return (
+              <li
+                key={id.toString()}
+                className={`feed-item ${selectedId === id ? 'selected' : ''}`}
+                onClick={() => onSelect(id)}
+              >
+                {/* 상품 사진 자리: 거래 상태를 아이콘으로 */}
+                <div className="thumb" aria-hidden>
+                  {deal ? ['📦', '🤝', '↩️'][deal.status] : '…'}
+                </div>
+                <div className="feed-body">
+                  <div className="feed-title">{deal ? deal.description || `거래 #${id.toString()}` : '불러오는 중…'}</div>
+                  <div className="feed-meta">
+                    #{id.toString()} · {tab === 'buyer' ? '판매자' : '구매자'}{' '}
+                    <span className="mono">{deal ? shortAddress(tab === 'buyer' ? deal.seller : deal.buyer) : '…'}</span>
+                  </div>
+                  <div className="feed-meta">마감 {deal ? formatTime(deal.deadline) : '…'}</div>
+                  <div className="feed-price">
+                    {deal && <span className={`badge s${deal.status}`}>{STATUS_LABEL[deal.status]}</span>}
+                    {deal ? `${formatMusd(deal.amount)} mUSD` : '…'}
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       )}
     </section>
   )

@@ -152,19 +152,28 @@ export function CreateDeal({ onCreated }: { onCreated: (id: bigint) => void }) {
 
   return (
     <section className="card">
-      <h2>거래 만들기 (구매자)</h2>
+      <h2>안전결제로 거래 시작하기</h2>
+      <p className="muted small lead">
+        구매자가 돈을 에스크로에 맡기고, 물건을 받은 뒤 구매확정하면 판매자에게 지급돼요.
+      </p>
 
       <div className="tabs mode">
         <button className={mode === 'approve' ? 'active' : ''} disabled={busy} onClick={() => switchMode('approve')}>
-          방식 A · approve + 예치 (트랜잭션 2번)
+          방식 A · approve + 예치
+          <br />
+          <span className="hint">트랜잭션 2번</span>
         </button>
         <button className={mode === 'permit' ? 'active' : ''} disabled={busy} onClick={() => switchMode('permit')}>
-          방식 B · permit 서명 + 예치 (트랜잭션 1번)
+          방식 B · permit 서명 + 예치
+          <br />
+          <span className="hint">트랜잭션 1번</span>
         </button>
       </div>
 
       <label>
-        판매자 주소
+        <span>
+          판매자 지갑 주소 <span className="hint">0x로 시작하는 42자리</span>
+        </span>
         <input
           className="mono"
           placeholder="0x…"
@@ -173,22 +182,27 @@ export function CreateDeal({ onCreated }: { onCreated: (id: bigint) => void }) {
           disabled={busy}
         />
       </label>
-      <div className="row">
-        <label>
-          금액 (mUSD)
-          <input inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)} disabled={busy} />
-        </label>
-        <label>
-          마감일 (이 시각이 지나면 판매자가 직접 받아 갈 수 있음)
-          <input type="datetime-local" value={deadlineValue} onChange={(e) => setDeadlineText(e.target.value)} disabled={busy} />
-        </label>
-      </div>
       <label>
-        설명
+        <span>
+          거래 물건 <span className="hint">목록에 제목으로 보여요</span>
+        </span>
         <input placeholder="예: 중고 키보드" value={description} onChange={(e) => setDescription(e.target.value)} disabled={busy} />
       </label>
+      <label>
+        가격
+        <div className="price-input">
+          <input inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)} disabled={busy} />
+          <span className="unit">mUSD</span>
+        </div>
+      </label>
+      <label>
+        <span>
+          마감일 <span className="hint">이 시각이 지나면 판매자가 직접 받아 갈 수 있어요</span>
+        </span>
+        <input type="datetime-local" value={deadlineValue} onChange={(e) => setDeadlineText(e.target.value)} disabled={busy} />
+      </label>
 
-      {problem && <p className="muted small">⚠️ {problem}</p>}
+      {problem && <p className="warn small">⚠️ {problem}</p>}
 
       {mode === 'approve' ? (
         <ol className="steps">
@@ -250,7 +264,7 @@ export function CreateDeal({ onCreated }: { onCreated: (id: bigint) => void }) {
         </ol>
       )}
 
-      {createdId !== undefined && <p className="ok">🎉 거래 #{createdId.toString()} 이(가) 만들어졌어요. 아래 목록에서 확인하세요.</p>}
+      {createdId !== undefined && <p className="result ok">🎉 거래 #{createdId.toString()} 이(가) 만들어졌어요. 위 "나의 안전거래"에서 확인하세요.</p>}
     </section>
   )
 }
